@@ -114,18 +114,22 @@ void VulkanBase::createGraphicsPipeline() {
 
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 
-	VkPipelineShaderStageCreateInfo vertShaderStageInfo = createVertexShaderInfo();
+	/*VkPipelineShaderStageCreateInfo vertShaderStageInfo = createVertexShaderInfo();
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = createFragmentShaderInfo();
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {
 		vertShaderStageInfo,
 		fragShaderStageInfo
-	};
+	};*/
 
 	pipelineInfo.stageCount = 2;
-	pipelineInfo.pStages = shaderStages;
-	pipelineInfo.pVertexInputState = &createVertexInputStateInfo();
-	pipelineInfo.pInputAssemblyState = &createInputAssemblyStateInfo();
+	pipelineInfo.pStages = m_GradientShader.getShaderStages().data();
+
+	auto is = m_GradientShader.createVertexInputStateInfo(device);
+	auto ias = m_GradientShader.createInputAssemblyStateInfo(device);
+
+	pipelineInfo.pVertexInputState = &is;
+	pipelineInfo.pInputAssemblyState = &ias;
 
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
@@ -141,6 +145,5 @@ void VulkanBase::createGraphicsPipeline() {
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
 
-	vkDestroyShaderModule(device, vertShaderStageInfo.module, nullptr);
-	vkDestroyShaderModule(device, fragShaderStageInfo.module, nullptr);
+	m_GradientShader.destroyShaderModules(device);
 }
