@@ -18,6 +18,7 @@
 #include <limits>
 #include <algorithm>
 
+#include "GP2CommandPool.h"
 #include "GP2Shader.h"
 
 
@@ -55,16 +56,64 @@ public:
 
 private:
 	void initVulkan() {
+
+
 		// week 06
+
+
+		// createInstance:
+		// Creates the 'Vulkan Instance'; the connection between the application and the Vulkan library.
+		// 1. Creates a 'VkApplicationInfo' struct - this stores extra information about the program that might help the driver optimize
+		// 2. Creates a 'VkInstanceCreateInfo' struct - tells the driver which global extensions and V.layers we want to use (Global = applicable for the entire program, not a specific device)
+		// 3. Finally Creates the VkInstance object using VkCreateInstance & our CreateInfo struct
+		// The instance will need to be destroyed when quitting the program
+
 		createInstance();
+
+		// setupDebugMessenger: Does validation layer stuff I don't really want to get into right now :p 
+		//
+
 		setupDebugMessenger();
+
+		// createSurface:
+		// Uses GLFW's CreateWindowSurface call to fill a 'VkSurfaceKHR' object
+		// This object represents an abstract type of surface that we can render to
+		// Which then can be displayed inside a window
+		// The Surface will need to be destroyed when quitting the program
+
+		// To be able to use the surface, we need a queue for both drawing and presenting to the surface
+		// These can be two different queues or they can be the same, depends on the GPU
+
 		createSurface();
 
 		// week 05
+
+
+		// pickPhysicalDevice:
+		// After Initializing the VkInstance, we need to find and select the graphics card in the system that has the features we need
+		// The selected GPU is stored inside a 'VkPhysicalDevice' object
+		// This object is destroyed implicitly when the Instance is destroyed, no need for explicit cleanup
+		//
+		// 1. Finds the number of GPUs available on the system
+		// 2. Stores the handles to all the devices in a buffer
+		// 3. Checks if the devices are suitable:
+		//	3a. Checks if the device has a queueFamily that supports drawing and one that supports presenting
+		//	3b. Checks if the required extensions are supported by comparing the available extensions of the device with the user defined 'const std::vector<const char*> deviceExtensions'.
+
 		pickPhysicalDevice();
+
+
+		// createLogicalDevice:
+		// Creates the 'VkDevice' object that represents the GPU with our preferred features enabled/disabled
+		// Also specifies how many queues of each available queueFamily we want this device to access
+		// For this project, 1 graphics queue and 1 present queue is created and usable by the VkDevice
 		createLogicalDevice();
 
-		// week 04 
+		// week 04
+
+		// createSwapChain:
+		// 
+
 		createSwapChain();
 		createImageViews();
 		
@@ -74,8 +123,10 @@ private:
 		createGraphicsPipeline();
 		createFrameBuffers();
 		// week 02
-		createCommandPool();
-		createCommandBuffer();
+		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
+		m_commandBuffer = m_commandPool.createCommandBuffer();
+		//createCommandPool();
+		//createCommandBuffer();
 
 		// week 06
 		createSyncObjects();
@@ -95,7 +146,7 @@ private:
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
 
-		vkDestroyCommandPool(device, commandPool, nullptr);
+		m_commandPool.Destroy();
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
@@ -148,15 +199,18 @@ private:
 	// Queue families
 	// CommandBuffer concept
 
-	VkCommandPool commandPool;
-	VkCommandBuffer commandBuffer;
+
+	GP2CommandPool m_commandPool;
+	GP2CommandBuffer m_commandBuffer;
+	//VkCommandPool commandPool;
+	//VkCommandBuffer commandBuffer;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 	void drawFrame(uint32_t imageIndex);
 	void createCommandBuffer();
 	void createCommandPool(); 
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex);
 	
 	// Week 03
 	// Renderpass concept

@@ -43,20 +43,22 @@ void VulkanBase::drawFrame() {
 	uint32_t imageIndex;
 	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-	vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
-	recordCommandBuffer(commandBuffer, imageIndex);
+	m_commandBuffer.Reset();
+	m_commandBuffer.BeginRecording();
+	recordCommandBuffer(m_commandBuffer, imageIndex);
+	m_commandBuffer.EndRecording();
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
 	VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
+	m_commandBuffer.Submit(submitInfo);
 
 	VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
 	submitInfo.signalSemaphoreCount = 1;
@@ -121,18 +123,25 @@ std::vector<const char*> VulkanBase::getRequiredExtensions() {
 }
 
 bool VulkanBase::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+
+	//Get # of extensions
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
+	//Get and store the extensions themselves
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
+	//Create a unique buffer of the required extensions (user defined?) names
 	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
+	//Erase the available extensions from the required ones
 	for (const auto& extension : availableExtensions) {
 		requiredExtensions.erase(extension.extensionName);
 	}
 
+	//if the required ext. list is now empty, our device supports all the extensions we need so TRUE
+	//else FALSE
 	return requiredExtensions.empty();
 }
 

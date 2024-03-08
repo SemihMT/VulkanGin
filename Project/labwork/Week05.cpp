@@ -28,19 +28,25 @@ void VulkanBase::pickPhysicalDevice() {
 }
 
 bool VulkanBase::isDeviceSuitable(VkPhysicalDevice device) {
+	
 	QueueFamilyIndices indices = findQueueFamilies(device);
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
+	//If there is a queue for drawing & presenting + 
 	return indices.isComplete() && extensionsSupported;
 
 }
 
 void VulkanBase::createLogicalDevice() {
+	//Find the queueFamilies we need (graphics & present)
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
-	float queuePriority = 1.0f;
+	// Define queue creation info
+	// Most importantly, we describe the number of queues (queueCount) we want of each QueueFamily
+
+	float queuePriority = 1.0f; //Priority between queues of the same family, for command buffer scheduling reasons
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
 		VkDeviceQueueCreateInfo queueCreateInfo{};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -50,11 +56,8 @@ void VulkanBase::createLogicalDevice() {
 		queueCreateInfos.push_back(queueCreateInfo);
 	}
 
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
 
+	//Specifying which features we want to enable in this logical VkDevice
 	VkPhysicalDeviceFeatures deviceFeatures{};
 
 	VkDeviceCreateInfo createInfo{};
@@ -80,6 +83,7 @@ void VulkanBase::createLogicalDevice() {
 		throw std::runtime_error("failed to create logical device!");
 	}
 
+	//Getting a handle to the Queues that are assigned to this device
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
