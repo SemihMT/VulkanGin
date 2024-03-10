@@ -31,7 +31,7 @@ bool VulkanBase::isDeviceSuitable(VkPhysicalDevice device) {
 	
 	QueueFamilyIndices indices = findQueueFamilies(device);
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
-	//If there is a queue for drawing & presenting + 
+	//If there is a queue for drawing & presenting + all the extensions we need are supported : DEVICE IS SUITABLE
 	return indices.isComplete() && extensionsSupported;
 
 }

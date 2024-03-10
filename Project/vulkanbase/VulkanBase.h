@@ -112,9 +112,43 @@ private:
 		// week 04
 
 		// createSwapChain:
-		// 
+		// The swapchain is the infrastructure that will own the buffers we render to before presenting them to the screen
+		// It's essentially a queue of images, waiting to be presented to the screen
+		// The application acquires one of these images, draws to it and returns it to the queue
 
+		// 1. Check if the GPU supports swapchains 'querySwapChainSupport'
+		// 2. Store the details of the swapchains we support and store them in 'SwapChainSupportDetails'
+		// 3. Choose the right settings for the swapchain:
+		//  3a. Choose the Surface Format (32bit/pixel + SRGB-nonlinear)
+		//  3b. Choose the Presentation Mode: (prefer MAILBOX and then FIFO)
+		//    * The presentation mode is arguably the most important setting for the swapchain
+		//    * It defines the actual conditions for showing the images to the screen (when and how)
+		// 4. Choose Swap Extent: The resolution of the swap chain images/buffers
+		//    * This is almost always the physical screen's resolution
+		// 5. Creating the Swap Chain:
+		//  5a. Store the surface format, present mode and extent
+		//  5b. Specify the minimum number of images we want in memory (minimum supported images + 1)
+		//  5c. Specify the maximum number of images (setting this to 0 means there is no max)
+		//  5d. FIll in the swapchain create info struct
+		//  5e. Set up how the images will be shared between queue families
+		//    * If the graphics and present queue are the same: use exclusive ownership
+		//	  * else: use share them between the queues
+		//  5f. Store handles to the images in 'swapChainImages' for easy retrieval and later use
+		//  5g. Store the image format & extent for later use
 		createSwapChain();
+
+
+		// createImageViews:
+		// Image views 'VkImageView' are necessary to use any image 'VkImage' in Vulkan
+		// An Image View describes how to access the image and which part of the image to access.
+		// 1. Resize the 'swapChainImageViews' vector to be the same size as the swapChainImages vector
+		// 2. Loop over all swapChainImages
+		// 3. Create the CreateInfo struct for the ImageViews
+		//  3a. Set the viewType to 2D & the format to be the same as the swapchain images
+		//  3b. Set the RGBA channels to default using VK_COMPONENT_SWIZZLE_IDENTITY
+		//  3c. Set the subresourceRange field (describes the image's purpose) to use the images as color targets with no mipmapping
+		// 4. Create the VkImageView & store it
+		// *** The image views are resources that we have to explicitly destroy ourselves ***
 		createImageViews();
 		
 		// week 03

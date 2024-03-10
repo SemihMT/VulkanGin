@@ -1,10 +1,12 @@
 #include "vulkanbase/VulkanBase.h"
 
 SwapChainSupportDetails VulkanBase::querySwapChainSupport(VkPhysicalDevice device) {
-	SwapChainSupportDetails details;
 
+	//Fill in the VkSurfaceCapabilitiesKHR struct inside SwapChainSupportDetails
+	SwapChainSupportDetails details;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
+	//Get the pixel formats this GPU supports
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
 
@@ -13,6 +15,7 @@ SwapChainSupportDetails VulkanBase::querySwapChainSupport(VkPhysicalDevice devic
 		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
 	}
 
+	//Get the available presentation modes
 	uint32_t presentModeCount;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 
@@ -24,6 +27,8 @@ SwapChainSupportDetails VulkanBase::querySwapChainSupport(VkPhysicalDevice devic
 	return details;
 }
 
+//Function that will choose the appropriate surface format
+//For us that is preferably one that stores 32 bits per pixel in SRGB color space
 VkSurfaceFormatKHR VulkanBase::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
