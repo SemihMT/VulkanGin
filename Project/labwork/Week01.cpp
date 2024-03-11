@@ -8,5 +8,7 @@ void VulkanBase::initWindow() {
 }
 
 void VulkanBase::drawScene() {
+	//Replace with actual scene drawing code
+	//foreach mesh in m_Scenes.current -> draw
 	vkCmdDraw(m_commandBuffer.GetVkCommandBuffer(), 6, 1, 0, 0);
 }

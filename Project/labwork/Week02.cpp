@@ -8,6 +8,7 @@ void VulkanBase::recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t im
 }
 
 void VulkanBase::drawFrame(uint32_t imageIndex) {
+	//binds the renderpass to the framebuffer we can render to
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = renderPass;
@@ -25,6 +26,8 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+	//Describes to what portion of the framebuffer we render
+	//Will almost always be 0,0 to window width, height
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -34,6 +37,7 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
+	//The scissor filter that discards any pixels that is not inside the extent it defines
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
 	scissor.extent = swapChainExtent;

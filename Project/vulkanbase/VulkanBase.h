@@ -152,16 +152,45 @@ private:
 		createImageViews();
 		
 		// week 03
+
+		// GP2Shader:
+		// This class handles the creation of shaders and thus also shader modules
+		// The constructor takes in paths to fragment and vertex shaders
+		// 1. Initialize the class
+		//    * Calls the Create - Fragment / Vertex - ShaderInfo Function
+		// 2. Creates Vertex / Fragment Shader Info
+		//  2a. Reads the file at the given path in the constructor & stores the bytes
+		//  2b. Creates a VkShaderModule that stores the code + size
+		//  2c. Stores the module in the ShaderInfo along with a string representation of the entry point of the shader
 		m_GradientShader.initialize(device);
+
+		//createRenderPass:
+		// Sets up the colorAttachment (Render Target) - The Image in memory that vulkan will render to
+		// Sets the layout of the render target to be optimal to render into
+		// Sets up the subpass that will render into that attachment with the fragment shader
+		// Creates the renderPass object
+		
 		createRenderPass();
+
+		// createGraphicsPipeline:
+		// 1. Define the viewportstate
+		// 2. Create the rasterizer
+		// 3. Define how to multi-sample
+		// 4. Set up color blending - none for now
+		// 5. Define dynamic state so we can e.g resize the window without having to recreate the pipeline
+		// 6. Create the pipeline layout 'pipelineLayout' that will store shader uniforms like the camera transform
+		// 7. Create the Pipeline 'graphicsPipeline'
 		createGraphicsPipeline();
+
+		// createFrameBuffers:
+		// This function creates a frame buffer object for each image we have in the swapchain.
+		// These are the link between the attachments and the real images in memory
 		createFrameBuffers();
 		// week 02
+
 		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
 		m_commandBuffer = m_commandPool.createCommandBuffer();
-		//createCommandPool();
-		//createCommandBuffer();
-
+		
 		// week 06
 		createSyncObjects();
 	}
@@ -242,8 +271,6 @@ private:
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 	void drawFrame(uint32_t imageIndex);
-	void createCommandBuffer();
-	void createCommandPool(); 
 	void recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex);
 	
 	// Week 03
