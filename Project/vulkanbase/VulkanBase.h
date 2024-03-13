@@ -17,9 +17,9 @@
 #include <set>
 #include <limits>
 #include <algorithm>
-
 #include "GP2CommandPool.h"
 #include "GP2Shader.h"
+#include "GP2VertexBuffer.h"
 
 
 const std::vector<const char*> validationLayers = {
@@ -45,6 +45,17 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
+
+//Temporary vertex buffer
+const std::vector<Vertex> vertices = {
+	{{-0.25f, -0.25f}, {1.0f, 0.0f, 0.0f}},
+	{{0.25f, -0.25f}, {0.0f, 1.0f, 0.0f}},
+	{{-0.25f, 0.25f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.25f, 0.25f}, {0.0f, 0.0f, 1.0f}},
+	{{0.25f, -0.25f}, {0.0f, 1.0f, 0.0f}},
+	{{0.25f, 0.25f}, {1.0f, 0.0f, 0.0f}}
+};
+
 class VulkanBase {
 public:
 	void run() {
@@ -55,6 +66,8 @@ public:
 	}
 
 private:
+	
+
 	void initVulkan() {
 
 
@@ -150,8 +163,11 @@ private:
 		// 4. Create the VkImageView & store it
 		// *** The image views are resources that we have to explicitly destroy ourselves ***
 		createImageViews();
-		
+
 		// week 03
+
+		m_vertexBuffer.Initialize(device, physicalDevice);
+
 
 		// GP2Shader:
 		// This class handles the creation of shaders and thus also shader modules
@@ -169,7 +185,7 @@ private:
 		// Sets the layout of the render target to be optimal to render into
 		// Sets up the subpass that will render into that attachment with the fragment shader
 		// Creates the renderPass object
-		
+
 		createRenderPass();
 
 		// createGraphicsPipeline:
@@ -190,7 +206,7 @@ private:
 
 		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
 		m_commandBuffer = m_commandPool.createCommandBuffer();
-		
+
 		// week 06
 		createSyncObjects();
 	}
@@ -226,6 +242,7 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
+		m_vertexBuffer.Destroy();
 		vkDestroyDevice(device, nullptr);
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -235,9 +252,9 @@ private:
 		glfwTerminate();
 	}
 
-	
 
-	
+
+
 
 	void createSurface() {
 		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
@@ -246,7 +263,10 @@ private:
 	}
 
 	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
+	GP2VertexBuffer m_vertexBuffer{};
 
+
+	
 
 	// Week 01: 
 	// Actual window
@@ -261,7 +281,7 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-
+	
 
 	GP2CommandPool m_commandPool;
 	GP2CommandBuffer m_commandBuffer;
@@ -272,11 +292,11 @@ private:
 
 	void drawFrame(uint32_t imageIndex);
 	void recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex);
-	
+
 	// Week 03
 	// Renderpass concept
 	// Graphics pipeline
-	
+
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
@@ -309,7 +329,7 @@ private:
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
-	
+
 	void pickPhysicalDevice();
 	bool isDeviceSuitable(VkPhysicalDevice device);
 	void createLogicalDevice();

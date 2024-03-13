@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vulkan/vulkan_core.h>
 #include <vector>
@@ -32,4 +33,8 @@ private:
 	std::string m_FragmentShaderFile;
 
 	std::vector<VkPipelineShaderStageCreateInfo> m_ShaderStages;
+
+
+	VkVertexInputBindingDescription m_bindingDescription{};
+	std::array<VkVertexInputAttributeDescription, 2> m_attributeDescriptions{};
 };

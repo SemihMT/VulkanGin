@@ -47,7 +47,9 @@ void VulkanBase::drawFrame() {
 	//Reset the cmdBuffer - begin of frame
 	m_commandBuffer.Reset();
 	m_commandBuffer.BeginRecording(); //Record to the command buffer
+
 	recordCommandBuffer(m_commandBuffer, imageIndex); // calls drawFrame
+
 	m_commandBuffer.EndRecording();
 
 	VkSubmitInfo submitInfo{};

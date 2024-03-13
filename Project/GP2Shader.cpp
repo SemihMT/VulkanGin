@@ -1,5 +1,6 @@
 ﻿#include "GP2Shader.h"
 
+#include "vulkanbase/VulkanBase.h"
 #include "vulkanbase/VulkanUtil.h"
 
 GP2Shader::GP2Shader(const std::string& vertShaderPath, const std::string& fragShaderPath)
@@ -73,9 +74,15 @@ VkPipelineShaderStageCreateInfo GP2Shader::createVertexShaderInfo(const VkDevice
 VkPipelineVertexInputStateCreateInfo GP2Shader::createVertexInputStateInfo(const VkDevice& vkDevice)
 {
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+	m_bindingDescription = Vertex::getBindingDescription();
+	m_attributeDescriptions = Vertex::getAttributeDescriptions();
+
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &m_bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = m_attributeDescriptions.data();
 	return vertexInputInfo;
 }
 

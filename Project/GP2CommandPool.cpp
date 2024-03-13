@@ -2,7 +2,6 @@
 #include "vulkanbase/VulkanBase.h"
 #include <stdexcept>
 
-
 void GP2CommandPool::Initialize(const VkDevice& device, const QueueFamilyIndices& queue)
 {
 	m_device = device;
@@ -19,6 +18,7 @@ void GP2CommandPool::Initialize(const VkDevice& device, const QueueFamilyIndices
 
 void GP2CommandPool::Destroy()
 {
+	
 	vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 }
 

@@ -26,6 +26,10 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
+	VkBuffer vertexBuffers[] = { m_vertexBuffer.GetVertexBuffer() };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
 	//Describes to what portion of the framebuffer we render
 	//Will almost always be 0,0 to window width, height
 	VkViewport viewport{};
