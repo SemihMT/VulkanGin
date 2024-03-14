@@ -8,6 +8,10 @@ void VulkanBase::recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t im
 }
 
 void VulkanBase::drawFrame(uint32_t imageIndex) {
+
+	//This function should get factorized into each separate
+	//element's setup or something
+
 	//binds the renderpass to the framebuffer we can render to
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -26,7 +30,7 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-	VkBuffer vertexBuffers[] = { m_vertexBuffer.GetVertexBuffer() };
+	VkBuffer vertexBuffers[] = { m_vertexBuffer.GetBuffer().GetVkBuffer() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 

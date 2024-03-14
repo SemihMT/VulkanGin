@@ -1,8 +1,7 @@
 #pragma once
 
 #include "GP2CommandBuffer.h"
-
-struct QueueFamilyIndices;
+#include "vulkanbase/VulkanUtil.h"
 
 //Pools Create & Own CommandBuffers
 class GP2CommandPool
@@ -14,9 +13,13 @@ public:
 	void Destroy();
 
 	GP2CommandBuffer createCommandBuffer() const;
+	VkCommandPool GetVkCommandPool() const { return m_commandPool; }
+	QueueFamilyIndices GetQueueFamiliyIndices() const { return m_queueFamilyIndices; }
+
 
 private:
 	VkCommandPool m_commandPool;
+	QueueFamilyIndices m_queueFamilyIndices;
 	VkDevice m_device;
 
 

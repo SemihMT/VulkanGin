@@ -30,14 +30,7 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-struct QueueFamilyIndices {
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> presentFamily;
 
-	bool isComplete() {
-		return graphicsFamily.has_value() && presentFamily.has_value();
-	}
-};
 
 struct SwapChainSupportDetails {
 	VkSurfaceCapabilitiesKHR capabilities;
@@ -166,7 +159,7 @@ private:
 
 		// week 03
 
-		m_vertexBuffer.Initialize(device, physicalDevice);
+		
 
 
 		// GP2Shader:
@@ -206,6 +199,9 @@ private:
 
 		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
 		m_commandBuffer = m_commandPool.createCommandBuffer();
+
+		m_vertexBuffer.Initialize(device, physicalDevice, m_commandPool);
+		m_vertexBuffer.CreateVertexBuffer();
 
 		// week 06
 		createSyncObjects();

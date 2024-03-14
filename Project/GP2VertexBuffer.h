@@ -1,4 +1,5 @@
 #pragma once
+#include "GP2Buffer.h"
 #include "vulkanbase/VulkanUtil.h"
 class GP2VertexBuffer
 {
@@ -6,14 +7,11 @@ public:
 	GP2VertexBuffer() = default;
 	~GP2VertexBuffer() = default;
 
-	void Initialize(VkDevice device, VkPhysicalDevice physicalDevice);
+	void Initialize(VkDevice device, VkPhysicalDevice physicalDevice, GP2CommandPool commandPool);
 	void CreateVertexBuffer();
-	void FillVertexBuffer();
 	void Destroy();
 
-	
-
-	VkBuffer GetVertexBuffer() const { return m_vertexBuffer; }
+	GP2Buffer GetBuffer() const { return m_buffer; }
 private:
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -21,7 +19,7 @@ private:
 
 	VkDevice m_device;
 	VkPhysicalDevice m_physicalDevice;
-	VkBuffer m_vertexBuffer{};
-	VkDeviceMemory m_vertexBufferMemory{};
+	GP2CommandPool m_commandPool;
+	GP2Buffer m_buffer;
 
 };

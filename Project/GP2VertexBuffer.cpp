@@ -1,49 +1,47 @@
 #include "GP2VertexBuffer.h"
 #include "vulkanbase/VulkanBase.h"
-void GP2VertexBuffer::Initialize(VkDevice device, VkPhysicalDevice physicalDevice)
+void GP2VertexBuffer::Initialize(VkDevice device, VkPhysicalDevice physicalDevice, GP2CommandPool commandPool)
 {
 	m_device = device;
 	m_physicalDevice = physicalDevice;
-	CreateVertexBuffer();
+	m_commandPool = commandPool;
+	m_buffer.Initialize(m_device, m_physicalDevice, m_commandPool);
+	
 }
 
 void GP2VertexBuffer::CreateVertexBuffer()
 {
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof(vertices[0]) * vertices.size();
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-	if(vkCreateBuffer(m_device, &bufferInfo, nullptr, &m_vertexBuffer)!= VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create vertex buffer!");
-	}
+	//Create the staging buffer
+	GP2Buffer stagingBuffer{};
+	stagingBuffer.Initialize(m_device, m_physicalDevice, m_commandPool);
+	stagingBuffer.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(m_device, m_vertexBuffer, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	if (vkAllocateMemory(m_device, &allocInfo, nullptr, &m_vertexBufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate vertex buffer memory!");
-	}
-	vkBindBufferMemory(m_device, m_vertexBuffer, m_vertexBufferMemory, 0);
-
-	//Copying the memory to the buffer
+	//Copy data to the staging buffer
 	void* data;
-	vkMapMemory(m_device, m_vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferInfo.size);
-	vkUnmapMemory(m_device, m_vertexBufferMemory);
+	vkMapMemory(m_device, stagingBuffer.GetVkDeviceMemory(), 0, bufferSize, 0, &data);
+	memcpy(data, vertices.data(), (size_t)bufferSize);
+	vkUnmapMemory(m_device, stagingBuffer.GetVkDeviceMemory());
+
+	//Create the GPU buffer
+	m_buffer.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	//Copy the staging buffer to the GPU
+	stagingBuffer.CopyBuffer(m_buffer, bufferSize);
+
+	//Destroy the staging buffer
+	stagingBuffer.Destroy();
+
+	
+	
+
+	
 }
 
 void GP2VertexBuffer::Destroy()
 {
-	vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);
-	vkFreeMemory(m_device, m_vertexBufferMemory, nullptr);
+	m_buffer.Destroy();
 }
 
 uint32_t GP2VertexBuffer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
