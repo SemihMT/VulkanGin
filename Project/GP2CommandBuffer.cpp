@@ -7,11 +7,11 @@ void GP2CommandBuffer::Reset() const
 	vkResetCommandBuffer(m_commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 }
 
-void GP2CommandBuffer::BeginRecording() const
+void GP2CommandBuffer::BeginRecording(VkCommandBufferUsageFlags flags) const
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0; //optional
+	beginInfo.flags = flags; //optional
 	beginInfo.pInheritanceInfo = nullptr; //optional
 
 	if (vkBeginCommandBuffer(m_commandBuffer, &beginInfo) != VK_SUCCESS) 

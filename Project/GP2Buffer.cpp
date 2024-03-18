@@ -46,7 +46,7 @@ void GP2Buffer::CopyBuffer(GP2Buffer dstBuffer, VkDeviceSize size)
 {
     auto cmdBuffer = m_commandPool.createCommandBuffer();
     auto vkCmdBuffer = cmdBuffer.GetVkCommandBuffer();
-    cmdBuffer.BeginRecording();
+    cmdBuffer.BeginRecording(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = 0; // Optional
     copyRegion.dstOffset = 0; // Optional

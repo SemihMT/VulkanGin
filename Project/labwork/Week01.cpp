@@ -10,5 +10,10 @@ void VulkanBase::initWindow() {
 void VulkanBase::drawScene() {
 	//Replace with actual scene drawing code
 	//foreach mesh in m_Scenes.current -> draw
-	vkCmdDraw(m_commandBuffer.GetVkCommandBuffer(), 6, 1, 0, 0);
+	//vkCmdDrawIndexed(m_commandBuffer.GetVkCommandBuffer(), static_cast<uint32_t>(indices.size()), 1, 0, 0,0);
+	for (const auto& mesh : meshes)
+	{
+		mesh.Bind(m_commandBuffer);
+		mesh.Draw(m_commandBuffer);
+	}
 }

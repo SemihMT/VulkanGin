@@ -39,7 +39,7 @@ set(SOURCES
     "GP2Shader.h" 
     "GP2Shader.cpp" 
     "GP2CommandPool.h" 
-    "GP2CommandPool.cpp" "GP2CommandBuffer.h" "GP2CommandBuffer.cpp" "GP2VertexBuffer.h" "GP2VertexBuffer.cpp" "GP2Buffer.h" "GP2Buffer.cpp")
+    "GP2CommandPool.cpp" "GP2CommandBuffer.h" "GP2CommandBuffer.cpp" "GP2VertexBuffer.h" "GP2VertexBuffer.cpp" "GP2Buffer.h" "GP2Buffer.cpp" "GP2IndexBuffer.h" "GP2IndexBuffer.cpp" "GP2Mesh.h" "GP2Mesh.cpp")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})

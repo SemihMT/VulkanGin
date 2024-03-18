@@ -30,9 +30,15 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-	VkBuffer vertexBuffers[] = { m_vertexBuffer.GetBuffer().GetVkBuffer() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	//This should get the vertexbuffers from all meshes
+	//std::vector<VkBuffer> vertexBuffers{};
+	//VkBuffer vertexBuffers[] = { m_vertexBuffer.GetBuffer().GetVkBuffer() };
+	//VkDeviceSize offsets[] = { 0 };
+	//vkCmdBindVertexBuffers(commandBuffer, 0, vertexBuffers.size(), vertexBuffers.data(), offsets);
+	//vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer().GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
+	
+	
+	
 
 	//Describes to what portion of the framebuffer we render
 	//Will almost always be 0,0 to window width, height

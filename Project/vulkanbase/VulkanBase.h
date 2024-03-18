@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VULKANBASE_H
+#define VULKANBASE_H
 
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
@@ -18,6 +19,8 @@
 #include <limits>
 #include <algorithm>
 #include "GP2CommandPool.h"
+#include "GP2IndexBuffer.h"
+#include "GP2Mesh.h"
 #include "GP2Shader.h"
 #include "GP2VertexBuffer.h"
 
@@ -39,14 +42,25 @@ struct SwapChainSupportDetails {
 };
 
 
+
+
 //Temporary vertex buffer
 const std::vector<Vertex> vertices = {
-	{{-0.25f, -0.25f}, {1.0f, 0.0f, 0.0f}},
-	{{0.25f, -0.25f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.25f, 0.25f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.25f, 0.25f}, {0.0f, 0.0f, 1.0f}},
-	{{0.25f, -0.25f}, {0.0f, 1.0f, 0.0f}},
-	{{0.25f, 0.25f}, {1.0f, 0.0f, 0.0f}}
+	   {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+
+	{{-0.5f + 0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f + 0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f + 0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f + 0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+
+};
+
+const std::vector<uint16_t> indices = {
+	0, 1, 2, 2, 3, 0,
+	4, 5, 6, 6, 7, 4
 };
 
 class VulkanBase {
@@ -59,7 +73,96 @@ public:
 	}
 
 private:
-	
+
+	void CreateTempMeshes()
+	{
+
+		float xOffset = 0.0f;
+		float yOffset = 0.0f;
+
+
+		xOffset = -0.5f;
+		yOffset = -0.5f;
+		//Rectangle
+		meshes.emplace_back(GP2Mesh
+		{ 
+			device, physicalDevice, m_commandPool,
+			{
+				{{-0.4f + xOffset, -0.4f + yOffset, 0.0f}, {1.0f, 0.0f, 0.0f}},
+				{{0.4f + xOffset, -0.4f + yOffset, 0.0f}, {0.0f, 1.0f, 0.0f}},
+				{{0.4f + xOffset, 0.4f + yOffset, 0.0f}, {0.0f, 0.0f, 1.0f}},
+				{{-0.4f + xOffset, 0.4f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}}
+			},
+			{
+				0, 1, 2, 2, 3, 0
+			} 
+		});
+
+		xOffset = 0.5f;
+		yOffset = -0.5f;
+		//Hexagon
+		meshes.emplace_back(GP2Mesh
+			{
+				 device, physicalDevice, m_commandPool,
+	{
+				// Center vertex
+				{{ 0.0f + xOffset,  0.0f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},  // Vertex 0 (center)
+				// Vertices forming hexagon around the center
+				{{ 0.0f + xOffset,  0.5f + yOffset, 0.0f}, {1.0f, 0.0f, 0.0f}},  // Vertex 1 (top)
+				{{ 0.433f + xOffset,  0.25f + yOffset, 0.0f}, {0.0f, 1.0f, 0.0f}}, // Vertex 2 (top-right)
+				{{ 0.433f + xOffset, -0.25f + yOffset, 0.0f}, {0.0f, 0.0f, 1.0f}}, // Vertex 3 (bottom-right)
+				{{ 0.0f + xOffset, -0.5f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},    // Vertex 4 (bottom)
+				{{ -0.433f + xOffset, -0.25f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},// Vertex 5 (bottom-left)
+				{{ -0.433f + xOffset,  0.25f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}} // Vertex 6 (top-left)
+			},
+			{
+			   // Indices forming a triangle fan
+			   0, 1, 6, // Triangle 1 (center to top-left)
+			   0, 6, 5, // Triangle 2 (center to bottom-left)
+			   0, 5, 4, // Triangle 3 (center to bottom)
+			   0, 4, 3, // Triangle 4 (center to bottom-right)
+			   0, 3, 2, // Triangle 5 (center to top-right)
+			   0, 2, 1  // Triangle 6 (center to top)
+			}
+		});
+		xOffset = 0.0f;
+		yOffset = 0.5f;
+		//5 pointed star
+		meshes.emplace_back(GP2Mesh
+			{
+				device, physicalDevice, m_commandPool,
+				{
+				// Center vertex
+				{{ 0.0f + xOffset,  0.0f + yOffset, 0.0f}, {0.9f, 0.9f, 0.9f}},  // Vertex 0 (center)
+				// Outer vertices of the star
+				{{ 0.0f + xOffset,  0.5f + yOffset, 0.0f}, {0.85f, 0.25f, 0.25f}},  // Vertex 1 (top)
+				{{ 0.1f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.85f, 0.25f}},  // Vertex 2 (top-right)
+				{{ 0.5f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.25f, 0.85f}},  // Vertex 3 (top-right extended)
+				{{ 0.2f + xOffset, -0.1f + yOffset, 0.0f}, {0.85f, 0.85f, 0.25f}},  // Vertex 4 (middle-right)
+				{{ 0.3f + xOffset, -0.5f + yOffset, 0.0f}, {0.25f, 0.85f, 0.85f}},  // Vertex 5 (bottom-right)
+				{{ 0.0f + xOffset, -0.25f + yOffset, 0.0f}, {0.85f, 0.25f, 0.85f}}, // Vertex 6 (bottom)
+				{{-0.3f + xOffset, -0.5f + yOffset, 0.0f}, {0.85f, 0.85f, 0.25f}},  // Vertex 7 (bottom-left)
+				{{-0.2f + xOffset, -0.1f + yOffset, 0.0f}, {0.25f, 0.85f, 0.85f}},  // Vertex 8 (middle-left)
+				{{-0.5f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.25f, 0.85f}},  // Vertex 9 (top-left extended)
+				{{-0.1f + xOffset,  0.2f + yOffset, 0.0f}, {0.85f, 0.25f, 0.25f}}   // Vertex 10 (top-left)
+			},
+			{
+				// Indices forming triangles for the star (wound in counter-clockwise order)
+				0, 2, 1,  // Triangle 1 (center to top-right to top)
+				0, 3, 2,  // Triangle 2 (center to top-right extended to top-right)
+				0, 4, 3,  // Triangle 3 (center to middle-right to top-right extended)
+				0, 5, 4,  // Triangle 4 (center to bottom-right to middle-right)
+				0, 6, 5,  // Triangle 5 (center to bottom to bottom-right)
+				0, 7, 6,  // Triangle 6 (center to bottom-left to bottom)
+				0, 8, 7,  // Triangle 7 (center to middle-left to bottom-left)
+				0, 9, 8,  // Triangle 8 (center to top-left extended to middle-left)
+				0, 10, 9, // Triangle 9 (center to top-left to top-left extended)
+				0, 1, 10  // Triangle 10 (center to top to top-left)
+			}
+			});
+
+
+	}
 
 	void initVulkan() {
 
@@ -159,7 +262,7 @@ private:
 
 		// week 03
 
-		
+
 
 
 		// GP2Shader:
@@ -201,7 +304,12 @@ private:
 		m_commandBuffer = m_commandPool.createCommandBuffer();
 
 		m_vertexBuffer.Initialize(device, physicalDevice, m_commandPool);
-		m_vertexBuffer.CreateVertexBuffer();
+		m_vertexBuffer.CreateVertexBuffer(vertices);
+
+		m_indexBuffer.Initialize(device, physicalDevice, m_commandPool);
+		m_indexBuffer.CreateIndexBuffer(indices);
+		
+		CreateTempMeshes();
 
 		// week 06
 		createSyncObjects();
@@ -217,6 +325,10 @@ private:
 	}
 
 	void cleanup() {
+
+		for (auto& m : meshes)
+			m.Destroy();
+
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
@@ -239,6 +351,7 @@ private:
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
 		m_vertexBuffer.Destroy();
+		m_indexBuffer.Destroy();
 		vkDestroyDevice(device, nullptr);
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -260,9 +373,11 @@ private:
 
 	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 	GP2VertexBuffer m_vertexBuffer{};
+	GP2IndexBuffer m_indexBuffer{};
 
+	//Store different meshes
+	std::vector<GP2Mesh> meshes{ };
 
-	
 
 	// Week 01: 
 	// Actual window
@@ -277,7 +392,7 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-	
+
 
 	GP2CommandPool m_commandPool;
 	GP2CommandBuffer m_commandBuffer;
@@ -356,3 +471,4 @@ private:
 		return VK_FALSE;
 	}
 };
+#endif // VULKANBASE_H

@@ -1,17 +1,17 @@
-#include "GP2VertexBuffer.h"
+#include "GP2IndexBuffer.h"
 #include "vulkanbase/VulkanBase.h"
-void GP2VertexBuffer::Initialize(VkDevice device, VkPhysicalDevice physicalDevice, GP2CommandPool commandPool)
+void GP2IndexBuffer::Initialize(VkDevice device, VkPhysicalDevice physicalDevice, GP2CommandPool commandPool)
 {
 	m_device = device;
 	m_physicalDevice = physicalDevice;
 	m_commandPool = commandPool;
 	m_buffer.Initialize(m_device, m_physicalDevice, m_commandPool);
-	
+
 }
 
-void GP2VertexBuffer::CreateVertexBuffer(const std::vector<Vertex>& vertices)
+void GP2IndexBuffer::CreateIndexBuffer(const std::vector<uint16_t>& indices)
 {
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 	//Create the staging buffer
 	GP2Buffer stagingBuffer{};
@@ -21,38 +21,31 @@ void GP2VertexBuffer::CreateVertexBuffer(const std::vector<Vertex>& vertices)
 	//Copy data to the staging buffer
 	void* data;
 	vkMapMemory(m_device, stagingBuffer.GetVkDeviceMemory(), 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
+	memcpy(data, indices.data(), (size_t)bufferSize);
 	vkUnmapMemory(m_device, stagingBuffer.GetVkDeviceMemory());
 
 	//Create the GPU buffer
-	m_buffer.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	m_buffer.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	//Copy the staging buffer to the GPU
 	stagingBuffer.CopyBuffer(m_buffer, bufferSize);
 
 	//Destroy the staging buffer
 	stagingBuffer.Destroy();
-
-	
-	
-
-	
 }
 
-void GP2VertexBuffer::Destroy()
+void GP2IndexBuffer::Destroy()
 {
 	m_buffer.Destroy();
 }
 
-
-
-uint32_t GP2VertexBuffer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+uint32_t GP2IndexBuffer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties{};
 	vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
 
 	//Loop over all the memory types
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
 	{
 		//Check if 
 		if ((typeFilter & (1 << i)) &&
