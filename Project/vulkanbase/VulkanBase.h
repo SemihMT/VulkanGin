@@ -303,11 +303,11 @@ private:
 		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
 		m_commandBuffer = m_commandPool.createCommandBuffer();
 
-		m_vertexBuffer.Initialize(device, physicalDevice, m_commandPool);
+		/*m_vertexBuffer.Initialize(device, physicalDevice, m_commandPool);
 		m_vertexBuffer.CreateVertexBuffer(vertices);
 
 		m_indexBuffer.Initialize(device, physicalDevice, m_commandPool);
-		m_indexBuffer.CreateIndexBuffer(indices);
+		m_indexBuffer.CreateIndexBuffer(indices);*/
 		
 		CreateTempMeshes();
 
@@ -350,8 +350,7 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
-		m_vertexBuffer.Destroy();
-		m_indexBuffer.Destroy();
+		
 		vkDestroyDevice(device, nullptr);
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -372,8 +371,6 @@ private:
 	}
 
 	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
-	GP2VertexBuffer m_vertexBuffer{};
-	GP2IndexBuffer m_indexBuffer{};
 
 	//Store different meshes
 	std::vector<GP2Mesh> meshes{ };

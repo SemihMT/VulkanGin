@@ -33,10 +33,6 @@ void GP2VertexBuffer::CreateVertexBuffer(const std::vector<Vertex>& vertices)
 	//Destroy the staging buffer
 	stagingBuffer.Destroy();
 
-	
-	
-
-	
 }
 
 void GP2VertexBuffer::Destroy()
