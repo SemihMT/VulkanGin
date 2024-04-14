@@ -19,6 +19,7 @@
 #include <limits>
 #include <algorithm>
 #include "GP2CommandPool.h"
+#include "GP2GraphicsPipeline2D.h"
 #include "GP2IndexBuffer.h"
 #include "GP2Mesh.h"
 #include "GP2Shader.h"
@@ -44,24 +45,24 @@ struct SwapChainSupportDetails {
 
 
 
-//Temporary vertex buffer
-const std::vector<Vertex> vertices = {
-	   {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-
-	{{-0.5f + 0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f + 0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f + 0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f + 0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-
-};
-
-const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0,
-	4, 5, 6, 6, 7, 4
-};
+////Temporary vertex buffer
+//const std::vector<Vertex2D> vertices = {
+//	   {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+//	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+//	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+//	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+//
+//	{{-0.5f + 0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
+//	{{0.5f + 0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+//	{{0.5f + 0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+//	{{-0.5f + 0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+//
+//};
+//
+//const std::vector<uint16_t> indices = {
+//	0, 1, 2, 2, 3, 0,
+//	4, 5, 6, 6, 7, 4
+//};
 
 class VulkanBase {
 public:
@@ -84,67 +85,67 @@ private:
 		xOffset = -0.5f;
 		yOffset = -0.5f;
 		//Rectangle
-		meshes.emplace_back(GP2Mesh
-		{ 
+		meshes2D.emplace_back(GP2Mesh<Vertex2D>
+		{
 			device, physicalDevice, m_commandPool,
 			{
-				{{-0.4f + xOffset, -0.4f + yOffset, 0.0f}, {1.0f, 0.0f, 0.0f}},
-				{{0.4f + xOffset, -0.4f + yOffset, 0.0f}, {0.0f, 1.0f, 0.0f}},
-				{{0.4f + xOffset, 0.4f + yOffset, 0.0f}, {0.0f, 0.0f, 1.0f}},
-				{{-0.4f + xOffset, 0.4f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}}
+				{{-0.4f + xOffset, -0.4f + yOffset}, {1.0f, 0.0f, 0.0f}},
+				{{0.4f + xOffset, -0.4f + yOffset}, {0.0f, 1.0f, 0.0f}},
+				{{0.4f + xOffset, 0.4f + yOffset}, {0.0f, 0.0f, 1.0f}},
+				{{-0.4f + xOffset, 0.4f + yOffset}, {1.0f, 1.0f, 1.0f}}
 			},
 			{
 				0, 1, 2, 2, 3, 0
-			} 
+			}
 		});
 
 		xOffset = 0.5f;
 		yOffset = -0.5f;
 		//Hexagon
-		meshes.emplace_back(GP2Mesh
+		meshes2D.emplace_back(GP2Mesh<Vertex2D>
+		{
+			device, physicalDevice, m_commandPool,
 			{
-				 device, physicalDevice, m_commandPool,
-	{
 				// Center vertex
-				{{ 0.0f + xOffset,  0.0f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},  // Vertex 0 (center)
+				{{ 0.0f + xOffset,  0.0f + yOffset}, {1.0f, 1.0f, 1.0f}},  // Vertex2D 0 (center)
 				// Vertices forming hexagon around the center
-				{{ 0.0f + xOffset,  0.5f + yOffset, 0.0f}, {1.0f, 0.0f, 0.0f}},  // Vertex 1 (top)
-				{{ 0.433f + xOffset,  0.25f + yOffset, 0.0f}, {0.0f, 1.0f, 0.0f}}, // Vertex 2 (top-right)
-				{{ 0.433f + xOffset, -0.25f + yOffset, 0.0f}, {0.0f, 0.0f, 1.0f}}, // Vertex 3 (bottom-right)
-				{{ 0.0f + xOffset, -0.5f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},    // Vertex 4 (bottom)
-				{{ -0.433f + xOffset, -0.25f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}},// Vertex 5 (bottom-left)
-				{{ -0.433f + xOffset,  0.25f + yOffset, 0.0f}, {1.0f, 1.0f, 1.0f}} // Vertex 6 (top-left)
+				{{ 0.0f + xOffset,  0.5f + yOffset}, {1.0f, 0.0f, 0.0f}},  // Vertex2D 1 (top)
+				{{ 0.433f + xOffset,  0.25f + yOffset}, {0.0f, 1.0f, 0.0f}}, // Vertex2D 2 (top-right)
+				{{ 0.433f + xOffset, -0.25f + yOffset}, {0.0f, 0.0f, 1.0f}}, // Vertex2D 3 (bottom-right)
+				{{ 0.0f + xOffset, -0.5f + yOffset}, {1.0f, 1.0f, 1.0f}},    // Vertex2D 4 (bottom)
+				{{ -0.433f + xOffset, -0.25f + yOffset}, {1.0f, 1.0f, 1.0f}},// Vertex2D 5 (bottom-left)
+				{{ -0.433f + xOffset,  0.25f + yOffset}, {1.0f, 1.0f, 1.0f}} // Vertex2D 6 (top-left)
 			},
 			{
-			   // Indices forming a triangle fan
-			   0, 1, 6, // Triangle 1 (center to top-left)
-			   0, 6, 5, // Triangle 2 (center to bottom-left)
-			   0, 5, 4, // Triangle 3 (center to bottom)
-			   0, 4, 3, // Triangle 4 (center to bottom-right)
-			   0, 3, 2, // Triangle 5 (center to top-right)
-			   0, 2, 1  // Triangle 6 (center to top)
+				// Indices forming a triangle fan
+				0, 1, 6, // Triangle 1 (center to top-left)
+				0, 6, 5, // Triangle 2 (center to bottom-left)
+				0, 5, 4, // Triangle 3 (center to bottom)
+				0, 4, 3, // Triangle 4 (center to bottom-right)
+				0, 3, 2, // Triangle 5 (center to top-right)
+				0, 2, 1  // Triangle 6 (center to top)
 			}
 		});
 		xOffset = 0.0f;
 		yOffset = 0.5f;
 		//5 pointed star
-		meshes.emplace_back(GP2Mesh
+		meshes2D.emplace_back(GP2Mesh<Vertex2D>
+		{
+			device, physicalDevice, m_commandPool,
 			{
-				device, physicalDevice, m_commandPool,
-				{
 				// Center vertex
-				{{ 0.0f + xOffset,  0.0f + yOffset, 0.0f}, {0.9f, 0.9f, 0.9f}},  // Vertex 0 (center)
+				{{ 0.0f + xOffset,  0.0f + yOffset}, {0.9f, 0.9f, 0.9f}},  // Vertex2D 0 (center)
 				// Outer vertices of the star
-				{{ 0.0f + xOffset,  0.5f + yOffset, 0.0f}, {0.85f, 0.25f, 0.25f}},  // Vertex 1 (top)
-				{{ 0.1f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.85f, 0.25f}},  // Vertex 2 (top-right)
-				{{ 0.5f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.25f, 0.85f}},  // Vertex 3 (top-right extended)
-				{{ 0.2f + xOffset, -0.1f + yOffset, 0.0f}, {0.85f, 0.85f, 0.25f}},  // Vertex 4 (middle-right)
-				{{ 0.3f + xOffset, -0.5f + yOffset, 0.0f}, {0.25f, 0.85f, 0.85f}},  // Vertex 5 (bottom-right)
-				{{ 0.0f + xOffset, -0.25f + yOffset, 0.0f}, {0.85f, 0.25f, 0.85f}}, // Vertex 6 (bottom)
-				{{-0.3f + xOffset, -0.5f + yOffset, 0.0f}, {0.85f, 0.85f, 0.25f}},  // Vertex 7 (bottom-left)
-				{{-0.2f + xOffset, -0.1f + yOffset, 0.0f}, {0.25f, 0.85f, 0.85f}},  // Vertex 8 (middle-left)
-				{{-0.5f + xOffset,  0.2f + yOffset, 0.0f}, {0.25f, 0.25f, 0.85f}},  // Vertex 9 (top-left extended)
-				{{-0.1f + xOffset,  0.2f + yOffset, 0.0f}, {0.85f, 0.25f, 0.25f}}   // Vertex 10 (top-left)
+				{{ 0.0f + xOffset,  0.5f + yOffset}, {0.85f, 0.25f, 0.25f}},  // Vertex2D 1 (top)
+				{{ 0.1f + xOffset,  0.2f + yOffset}, {0.25f, 0.85f, 0.25f}},  // Vertex2D 2 (top-right)
+				{{ 0.5f + xOffset,  0.2f + yOffset}, {0.25f, 0.25f, 0.85f}},  // Vertex2D 3 (top-right extended)
+				{{ 0.2f + xOffset, -0.1f + yOffset}, {0.85f, 0.85f, 0.25f}},  // Vertex2D 4 (middle-right)
+				{{ 0.3f + xOffset, -0.5f + yOffset}, {0.25f, 0.85f, 0.85f}},  // Vertex2D 5 (bottom-right)
+				{{ 0.0f + xOffset, -0.25f + yOffset}, {0.85f, 0.25f, 0.85f}}, // Vertex2D 6 (bottom)
+				{{-0.3f + xOffset, -0.5f + yOffset}, {0.85f, 0.85f, 0.25f}},  // Vertex2D 7 (bottom-left)
+				{{-0.2f + xOffset, -0.1f + yOffset}, {0.25f, 0.85f, 0.85f}},  // Vertex2D 8 (middle-left)
+				{{-0.5f + xOffset,  0.2f + yOffset}, {0.25f, 0.25f, 0.85f}},  // Vertex2D 9 (top-left extended)
+				{{-0.1f + xOffset,  0.2f + yOffset}, {0.85f, 0.25f, 0.25f}}   // Vertex2D 10 (top-left)
 			},
 			{
 				// Indices forming triangles for the star (wound in counter-clockwise order)
@@ -159,7 +160,39 @@ private:
 				0, 10, 9, // Triangle 9 (center to top-left to top-left extended)
 				0, 1, 10  // Triangle 10 (center to top to top-left)
 			}
-			});
+		});
+		xOffset = 0.3f;
+		yOffset = 0.8f;
+		meshes3D.emplace_back(GP2Mesh<Vertex3D>
+		{
+			device, physicalDevice, m_commandPool,
+			{
+				// Vertices of the cube
+				{{-0.5f + xOffset, -0.5f + yOffset, 0.5f}, {1.0f, 0.0f, 0.0f}}, // Vertex 0 (front-bottom-left)
+				{{ 0.5f + xOffset, -0.5f + yOffset, 0.5f}, {0.0f, 1.0f, 0.0f}}, // Vertex 1 (front-bottom-right)
+				{{ 0.5f + xOffset,  0.5f + yOffset, 0.5f}, {0.0f, 0.0f, 1.0f}}, // Vertex 2 (front-top-right)
+				{{-0.5f + xOffset,  0.5f + yOffset, 0.5f}, {1.0f, 1.0f, 0.0f}}, // Vertex 3 (front-top-left)
+				{{-0.5f + xOffset, -0.5f + yOffset,-0.5f}, {0.0f, 1.0f, 1.0f}}, // Vertex 4 (back-bottom-left)
+				{{ 0.5f + xOffset, -0.5f + yOffset,-0.5f}, {1.0f, 0.0f, 1.0f}}, // Vertex 5 (back-bottom-right)
+				{{ 0.5f + xOffset,  0.5f + yOffset,-0.5f}, {0.5f, 0.5f, 0.5f}}, // Vertex 6 (back-top-right)
+				{{-0.5f + xOffset,  0.5f + yOffset,-0.5f}, {0.5f, 0.5f, 0.5f}}  // Vertex 7 (back-top-left)
+			},
+	{
+			// Indices forming triangles for the cube
+			0, 1, 2, // Front face
+			0, 2, 3,
+			1, 5, 6, // Right face
+			1, 6, 2,
+			4, 7, 6, // Back face
+			4, 6, 5,
+			4, 0, 3, // Left face
+			4, 3, 7,
+			3, 2, 6, // Top face
+			3, 6, 7,
+			4, 5, 1, // Bottom face
+			4, 1, 0
+		}
+		});
 
 
 	}
@@ -269,12 +302,13 @@ private:
 		// This class handles the creation of shaders and thus also shader modules
 		// The constructor takes in paths to fragment and vertex shaders
 		// 1. Initialize the class
-		//    * Calls the Create - Fragment / Vertex - ShaderInfo Function
-		// 2. Creates Vertex / Fragment Shader Info
+		//    * Calls the Create - Fragment / Vertex2D - ShaderInfo Function
+		// 2. Creates Vertex2D / Fragment Shader Info
 		//  2a. Reads the file at the given path in the constructor & stores the bytes
 		//  2b. Creates a VkShaderModule that stores the code + size
 		//  2c. Stores the module in the ShaderInfo along with a string representation of the entry point of the shader
 		m_GradientShader.initialize(device);
+		m_FlatShadingShader.initialize(device);
 
 		//createRenderPass:
 		// Sets up the colorAttachment (Render Target) - The Image in memory that vulkan will render to
@@ -284,6 +318,12 @@ private:
 
 		createRenderPass();
 
+
+
+		//Create a GP2GraphicsPipeline Class:
+		// It should:
+		//	- 
+
 		// createGraphicsPipeline:
 		// 1. Define the viewportstate
 		// 2. Create the rasterizer
@@ -292,7 +332,10 @@ private:
 		// 5. Define dynamic state so we can e.g resize the window without having to recreate the pipeline
 		// 6. Create the pipeline layout 'pipelineLayout' that will store shader uniforms like the camera transform
 		// 7. Create the Pipeline 'graphicsPipeline'
-		createGraphicsPipeline();
+
+		m_graphicsPipeline2D.Initialize(device, &m_GradientShader, renderPass);
+		m_graphicsPipeline3D.Initialize(device, &m_FlatShadingShader, renderPass);
+		//createGraphicsPipeline();
 
 		// createFrameBuffers:
 		// This function creates a frame buffer object for each image we have in the swapchain.
@@ -308,7 +351,7 @@ private:
 
 		m_indexBuffer.Initialize(device, physicalDevice, m_commandPool);
 		m_indexBuffer.CreateIndexBuffer(indices);*/
-		
+
 		CreateTempMeshes();
 
 		// week 06
@@ -326,7 +369,9 @@ private:
 
 	void cleanup() {
 
-		for (auto& m : meshes)
+		for (auto& m : meshes2D)
+			m.Destroy();
+		for (auto& m : meshes3D)
 			m.Destroy();
 
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
@@ -338,8 +383,10 @@ private:
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
 
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		//vkDestroyPipeline(device, graphicsPipeline, nullptr);
+		//vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		m_graphicsPipeline2D.Destroy();
+		m_graphicsPipeline3D.Destroy();
 		vkDestroyRenderPass(device, renderPass, nullptr);
 
 		for (auto imageView : swapChainImageViews) {
@@ -350,7 +397,7 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
-		
+
 		vkDestroyDevice(device, nullptr);
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -370,10 +417,12 @@ private:
 		}
 	}
 
-	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
+	GP2Shader<Vertex2D> m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
+	GP2Shader<Vertex3D> m_FlatShadingShader{ "shaders/flatShading.vert.spv", "shaders/flatShading.frag.spv" };
 
 	//Store different meshes
-	std::vector<GP2Mesh> meshes{ };
+	std::vector<GP2Mesh<Vertex2D>> meshes2D{ };
+	std::vector<GP2Mesh<Vertex3D>> meshes3D{ };
 
 
 	// Week 01: 
@@ -384,6 +433,8 @@ private:
 
 	GLFWwindow* window;
 	void initWindow();
+	void drawScene2D();
+	void drawScene3D();
 	void drawScene();
 
 	// Week 02
@@ -407,7 +458,9 @@ private:
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
+	//VkPipeline graphicsPipeline;
+	GP2GraphicsPipeline2D<Vertex2D> m_graphicsPipeline2D;
+	GP2GraphicsPipeline2D<Vertex3D> m_graphicsPipeline3D;
 	VkRenderPass renderPass;
 
 	void createFrameBuffers();

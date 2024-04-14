@@ -26,20 +26,6 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 
 	auto commandBuffer = m_commandBuffer.GetVkCommandBuffer();
 
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-	//This should get the vertexbuffers from all meshes
-	//std::vector<VkBuffer> vertexBuffers{};
-	//VkBuffer vertexBuffers[] = { m_vertexBuffer.GetBuffer().GetVkBuffer() };
-	//VkDeviceSize offsets[] = { 0 };
-	//vkCmdBindVertexBuffers(commandBuffer, 0, vertexBuffers.size(), vertexBuffers.data(), offsets);
-	//vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer().GetVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
-	
-	
-	
-
 	//Describes to what portion of the framebuffer we render
 	//Will almost always be 0,0 to window width, height
 	VkViewport viewport{};
@@ -57,7 +43,15 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	drawScene();
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	//Probably not the most efficient way of doing things...
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline2D.VkGraphicsPipeline());
+	drawScene2D();
+
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.VkGraphicsPipeline());
+	drawScene3D();
 	vkCmdEndRenderPass(commandBuffer);
 }
 

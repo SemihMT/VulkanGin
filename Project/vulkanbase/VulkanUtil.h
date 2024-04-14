@@ -40,12 +40,12 @@ struct QueueFamilyIndices {
 };
 
 
-//Vertex struct - describes vertex attributes used in the vertex shader
+//Vertex2D struct - describes vertex attributes used in the vertex shader
 //The vertex buffer will store these per-vertex 
-struct Vertex
+struct Vertex2D
 {
 	//Attributes
-	glm::vec3 pos;
+	glm::vec2 pos;
 	glm::vec3 color;
 
 	// Binding Description
@@ -53,7 +53,43 @@ struct Vertex
 	static VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0; //index of the binding in the array of bindings
-		bindingDescription.stride = sizeof(Vertex); // number of bytes from one entry to the next
+		bindingDescription.stride = sizeof(Vertex2D); // number of bytes from one entry to the next
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // Move to next data entry after each vertex
+		return bindingDescription;
+	}
+
+	//The attr description describes how the gpu needs to extract the data that is in this struct
+	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+
+		//Describing the Position attribute
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].location = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex2D, pos);
+
+		//Describing the Color attribute
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex2D, color);
+		return attributeDescriptions;
+	}
+};
+
+struct Vertex3D
+{
+	//Attributes
+	glm::vec3 pos;
+	glm::vec3 color;
+	//add more attributes here:
+
+	// Binding Description
+	// This is how we tell Vulkan to pass this data to the GPU
+	static VkVertexInputBindingDescription getBindingDescription() {
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0; //index of the binding in the array of bindings
+		bindingDescription.stride = sizeof(Vertex3D); // number of bytes from one entry to the next
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // Move to next data entry after each vertex
 		return bindingDescription;
 	}
@@ -66,13 +102,16 @@ struct Vertex
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
 		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
+		attributeDescriptions[0].offset = offsetof(Vertex3D, pos);
 
 		//Describing the Color attribute
 		attributeDescriptions[1].binding = 0;
 		attributeDescriptions[1].location = 1;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
+		attributeDescriptions[1].offset = offsetof(Vertex3D, color);
+
+		//Describe more attributes here:
+
 		return attributeDescriptions;
 	}
 };
