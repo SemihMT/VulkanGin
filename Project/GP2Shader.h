@@ -128,5 +128,5 @@ private:
 
 
 	VkVertexInputBindingDescription m_bindingDescription{};
-	std::array<VkVertexInputAttributeDescription, 2> m_attributeDescriptions{};
+	std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions{};
 };

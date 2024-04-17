@@ -9,9 +9,9 @@
 #include <optional>
 #include <GLFW/glfw3native.h>
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
-
+constexpr uint32_t WIDTH = 800;
+constexpr uint32_t HEIGHT = 600;
+constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
@@ -40,6 +40,17 @@ struct QueueFamilyIndices {
 };
 
 
+struct UniformBufferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
+
+struct PushConstant
+{
+	glm::vec3 lightDirection;
+};
+
 //Vertex2D struct - describes vertex attributes used in the vertex shader
 //The vertex buffer will store these per-vertex 
 struct Vertex2D
@@ -47,6 +58,7 @@ struct Vertex2D
 	//Attributes
 	glm::vec2 pos;
 	glm::vec3 color;
+	
 
 	// Binding Description
 	// This is how we tell Vulkan to pass this data to the GPU
@@ -59,9 +71,8 @@ struct Vertex2D
 	}
 
 	//The attr description describes how the gpu needs to extract the data that is in this struct
-	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-
+	static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
 		//Describing the Position attribute
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
@@ -82,6 +93,7 @@ struct Vertex3D
 	//Attributes
 	glm::vec3 pos;
 	glm::vec3 color;
+	glm::vec3 normal;
 	//add more attributes here:
 
 	// Binding Description
@@ -95,8 +107,8 @@ struct Vertex3D
 	}
 
 	//The attr description describes how the gpu needs to extract the data that is in this struct
-	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+	static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
 
 		//Describing the Position attribute
 		attributeDescriptions[0].binding = 0;
@@ -109,6 +121,12 @@ struct Vertex3D
 		attributeDescriptions[1].location = 1;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[1].offset = offsetof(Vertex3D, color);
+
+		//Describing the Normal attribute
+		attributeDescriptions[2].binding = 0;
+		attributeDescriptions[2].location = 2;
+		attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[2].offset = offsetof(Vertex3D, normal);
 
 		//Describe more attributes here:
 

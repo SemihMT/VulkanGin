@@ -7,23 +7,28 @@ class GP2GraphicsPipeline2D final
 {
 public:
 	GP2GraphicsPipeline2D() = default;
-	GP2GraphicsPipeline2D(VkDevice device, GP2Shader<VertexType>* shader, VkRenderPass renderPass)
+	GP2GraphicsPipeline2D(VkDevice device, GP2Shader<VertexType>* shader, VkRenderPass renderPass, VkDescriptorSetLayout layout, VkPushConstantRange pushConstant)
 	{
-		Initialize(device, shader, renderPass);
+		Initialize(device, shader, renderPass, layout, pushConstant);
 	}
 	~GP2GraphicsPipeline2D() = default;
 
-	void Initialize(VkDevice device, GP2Shader<VertexType>* shader, VkRenderPass renderPass)
+
+	void Initialize(VkDevice device, GP2Shader<VertexType>* shader, VkRenderPass renderPass, VkDescriptorSetLayout layout, VkPushConstantRange pushConstant)
 	{
 		m_device = device;
 		m_shader = shader;
 		m_renderPass = renderPass;
+		m_descriptorSetLayout = layout;
+		m_pushConstant = pushConstant;
 
 		CreateGraphicsPipeline();
 	}
 
 	void CreateGraphicsPipeline()
 	{
+		createPipelineLayout();
+
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -56,7 +61,7 @@ public:
 		pipelineInfo.pColorBlendState = &colorBlendState;
 		pipelineInfo.pDynamicState = &dynamicState;
 
-		createPipelineLayout();
+		
 		pipelineInfo.layout = m_pipelineLayout;
 		pipelineInfo.renderPass = m_renderPass;
 		pipelineInfo.subpass = 0;
@@ -75,9 +80,14 @@ public:
 		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 	}
 
-	VkPipeline VkGraphicsPipeline() const
+	VkPipeline GetVkGraphicsPipeline() const
 	{
 		return m_graphicsPipeline;
+	}
+
+	VkPipelineLayout GetVkPipelineLayout() const
+	{
+		return m_pipelineLayout;
 	}
 
 private:
@@ -96,7 +106,7 @@ private:
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 	}
 
@@ -135,8 +145,11 @@ private:
 	void createPipelineLayout() {
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		//pipelineLayoutInfo.pushConstantRangeCount = 0;
+		pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
+		pipelineLayoutInfo.pPushConstantRanges = &m_pushConstant;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
 
 		if (vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
@@ -147,6 +160,9 @@ private:
 	GP2Shader<VertexType>* m_shader;
 	VkDevice m_device;
 	VkRenderPass m_renderPass;
+	VkDescriptorSetLayout m_descriptorSetLayout;
+	VkPushConstantRange m_pushConstant;
+
 
 	//Things that get created here
 	VkPipelineLayout m_pipelineLayout{ VK_NULL_HANDLE };

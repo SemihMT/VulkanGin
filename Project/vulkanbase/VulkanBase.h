@@ -18,6 +18,12 @@
 #include <set>
 #include <limits>
 #include <algorithm>
+
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <chrono>
+
 #include "GP2CommandPool.h"
 #include "GP2GraphicsPipeline2D.h"
 #include "GP2IndexBuffer.h"
@@ -161,41 +167,72 @@ private:
 				0, 1, 10  // Triangle 10 (center to top to top-left)
 			}
 		});
-		xOffset = 0.3f;
-		yOffset = 0.8f;
+
+
+		glm::vec3 worldPos{};
+
+		worldPos = { 10,0,10 };
+		//plane
+		meshes3D.emplace_back(GP2Mesh<Vertex3D>
+		{
+			device, physicalDevice, m_commandPool,
+			{
+				// Vertices of the plane
+				{{-1.5f, -1.5f, 1.5f}, {0.5f, 0.5f, 0.5f},{0.0f,1.0f,0.0f}}, // Vertex 0 (top-left)
+				{{ 1.5f, -1.5f, 1.5f}, {0.5f, 0.5f, 0.5f},{0.0f,1.0f,0.0f}}, // Vertex 1 (top-right)
+				{{ 1.5f, -1.5f,-1.5f}, {0.5f, 0.5f, 0.5f},{0.0f,1.0f,0.0f}}, // Vertex 2 (bottom-right)
+				{{-1.5f, -1.5f,-1.5f}, {0.5f, 0.5f, 0.5f},{0.0f,1.0f,0.0f}}  // Vertex 3 (bottom-left)
+			},
+	{
+		// Indices forming triangles for the plane
+		0, 1, 2, // Triangle 1
+		2, 3, 0  // Triangle 2
+	}
+		});
+
+
+		xOffset = 1.0f;
+		yOffset = -1.0f;
+		float size = 0.5f;
 		meshes3D.emplace_back(GP2Mesh<Vertex3D>
 		{
 			device, physicalDevice, m_commandPool,
 			{
 				// Vertices of the cube
-				{{-0.5f + xOffset, -0.5f + yOffset, 0.5f}, {1.0f, 0.0f, 0.0f}}, // Vertex 0 (front-bottom-left)
-				{{ 0.5f + xOffset, -0.5f + yOffset, 0.5f}, {0.0f, 1.0f, 0.0f}}, // Vertex 1 (front-bottom-right)
-				{{ 0.5f + xOffset,  0.5f + yOffset, 0.5f}, {0.0f, 0.0f, 1.0f}}, // Vertex 2 (front-top-right)
-				{{-0.5f + xOffset,  0.5f + yOffset, 0.5f}, {1.0f, 1.0f, 0.0f}}, // Vertex 3 (front-top-left)
-				{{-0.5f + xOffset, -0.5f + yOffset,-0.5f}, {0.0f, 1.0f, 1.0f}}, // Vertex 4 (back-bottom-left)
-				{{ 0.5f + xOffset, -0.5f + yOffset,-0.5f}, {1.0f, 0.0f, 1.0f}}, // Vertex 5 (back-bottom-right)
-				{{ 0.5f + xOffset,  0.5f + yOffset,-0.5f}, {0.5f, 0.5f, 0.5f}}, // Vertex 6 (back-top-right)
-				{{-0.5f + xOffset,  0.5f + yOffset,-0.5f}, {0.5f, 0.5f, 0.5f}}  // Vertex 7 (back-top-left)
+				{{-size + xOffset, -size + yOffset, size}, {0.5f,0.5f,0.5f},{0.0f, 0.0f, 0.0f}}, // Vertex 0 (front-bottom-left)
+				{{ size + xOffset, -size + yOffset, size}, {0.5f,0.5f,0.5f},{0.0f, 0.0f, 0.0f}}, // Vertex 1 (front-bottom-right)
+				{{ size + xOffset,  size + yOffset, size}, {0.5f,0.5f,0.5f},{0.0f, 1.0f, 0.0f}}, // Vertex 2 (front-top-right)
+				{{-size + xOffset,  size + yOffset, size}, {0.5f,0.5f,0.5f},{0.0f, 1.0f, 0.0f}}, // Vertex 3 (front-top-left)
+				{{-size + xOffset, -size + yOffset,-size}, {0.5f,0.5f,0.5f},{0.0f, 0.0f, 0.0f}}, // Vertex 4 (back-bottom-left)
+				{{ size + xOffset, -size + yOffset,-size}, {0.5f,0.5f,0.5f},{0.0f, 0.0f, 0.0f}}, // Vertex 5 (back-bottom-right)
+				{{ size + xOffset,  size + yOffset,-size}, {0.5f,0.5f,0.5f},{0.0f, 1.0f, 0.0f}}, // Vertex 6 (back-top-right)
+				{{-size + xOffset,  size + yOffset,-size}, {0.5f,0.5f,0.5f},{0.0f, 1.0f, 0.0f}}  // Vertex 7 (back-top-left)
 			},
 	{
-			// Indices forming triangles for the cube
-			0, 1, 2, // Front face
-			0, 2, 3,
-			1, 5, 6, // Right face
-			1, 6, 2,
-			4, 7, 6, // Back face
-			4, 6, 5,
-			4, 0, 3, // Left face
-			4, 3, 7,
-			3, 2, 6, // Top face
-			3, 6, 7,
-			4, 5, 1, // Bottom face
-			4, 1, 0
-		}
+		// Indices forming triangles for the cube
+		0, 1, 2, // Front face
+		0, 2, 3,
+		1, 5, 6, // Right face
+		1, 6, 2,
+		4, 7, 6, // Back face
+		4, 6, 5,
+		4, 0, 3, // Left face
+		4, 3, 7,
+		3, 2, 6, // Top face
+		3, 6, 7,
+		4, 5, 1, // Bottom face
+		4, 1, 0
+	}
 		});
+
+		meshes3D.emplace_back(
+			device, physicalDevice, m_commandPool, "Resources/Bunny.obj"
+		);
 
 
 	}
+
+
 
 	void initVulkan() {
 
@@ -318,7 +355,16 @@ private:
 
 		createRenderPass();
 
+		//layout: 
+		createDescriptorSetLayout();
+		//buffer:
+		createUniformBuffers();
+		//pool:
+		createDescriptorPool();
+		//set:
+		createDescriptorSets();
 
+		createPushConstantRanges();
 
 		//Create a GP2GraphicsPipeline Class:
 		// It should:
@@ -333,8 +379,8 @@ private:
 		// 6. Create the pipeline layout 'pipelineLayout' that will store shader uniforms like the camera transform
 		// 7. Create the Pipeline 'graphicsPipeline'
 
-		m_graphicsPipeline2D.Initialize(device, &m_GradientShader, renderPass);
-		m_graphicsPipeline3D.Initialize(device, &m_FlatShadingShader, renderPass);
+		m_graphicsPipeline2D.Initialize(device, &m_GradientShader, renderPass, descriptorSetLayout, m_pushConstantRange);
+		m_graphicsPipeline3D.Initialize(device, &m_FlatShadingShader, renderPass, descriptorSetLayout, m_pushConstantRange);
 		//createGraphicsPipeline();
 
 		// createFrameBuffers:
@@ -345,6 +391,8 @@ private:
 
 		m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
 		m_commandBuffer = m_commandPool.createCommandBuffer();
+
+		//CreateDepthResources();
 
 		/*m_vertexBuffer.Initialize(device, physicalDevice, m_commandPool);
 		m_vertexBuffer.CreateVertexBuffer(vertices);
@@ -357,10 +405,45 @@ private:
 		// week 06
 		createSyncObjects();
 	}
+	std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTime{};
+	double m_deltaTime{};
+
+	void CalculateDeltaTime()
+	{
+		// Calculate delta time
+		std::chrono::steady_clock::time_point currentFrameTime = std::chrono::steady_clock::now();
+		std::chrono::duration<double> timeElapsed = std::chrono::duration_cast<std::chrono::duration<double>>(currentFrameTime - m_lastFrameTime);
+		m_deltaTime = timeElapsed.count();
+
+		// Update last frame time for the next iteration
+		m_lastFrameTime = currentFrameTime;
+	}
+
+
+	// camera
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	inline static glm::vec3 cameraFront{ glm::vec3(0.0f, 0.0f, -1.0f) };
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	inline static bool firstMouse = true;
+	inline static float yaw = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+	inline static float pitch = 0.0f;
+	inline static float lastX = WIDTH / 2.0;
+	inline static float lastY = HEIGHT / 2.0;
+	inline static float fov = 45.0f;
+
+	void update()
+	{
+		CalculateDeltaTime();
+
+		processInput(window);
+	}
 
 	void mainLoop() {
+		m_lastFrameTime = std::chrono::steady_clock::now(); // Initialize last frame time
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
+			update();
 			// week 06
 			drawFrame();
 		}
@@ -393,6 +476,15 @@ private:
 			vkDestroyImageView(device, imageView, nullptr);
 		}
 
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+			uniformBuffers[i].Destroy();
+		}
+
+
+		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
@@ -408,7 +500,79 @@ private:
 	}
 
 
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (VkFormat format : candidates) {
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
 
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+				return format;
+			}
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+				return format;
+			}
+		}
+		throw std::runtime_error("failed to find supported format!");
+	}
+
+	VkFormat findDepthFormat() {
+		return findSupportedFormat(
+			{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+		);
+	}
+
+	bool hasStencilComponent(VkFormat format) {
+		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+	}
+
+	/*void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = width;
+		imageInfo.extent.height = height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = format;
+		imageInfo.tiling = tiling;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.usage = usage;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create image!");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate image memory!");
+		}
+
+		vkBindImageMemory(device, image, imageMemory, 0);
+	}
+
+	VkImage depthImage;
+	VkDeviceMemory depthImageMemory;
+	VkImageView depthImageView;
+	void CreateDepthResources()
+	{
+		VkFormat depthFormat = findDepthFormat();
+
+		createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		depthImageView = createImageView(depthImage, depthFormat);
+	}*/
 
 
 	void createSurface() {
@@ -424,6 +588,74 @@ private:
 	std::vector<GP2Mesh<Vertex2D>> meshes2D{ };
 	std::vector<GP2Mesh<Vertex3D>> meshes3D{ };
 
+
+
+	static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+	{
+		float xpos = static_cast<float>(xposIn);
+		float ypos = static_cast<float>(yposIn);
+
+		if (firstMouse)
+		{
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+		lastX = xpos;
+		lastY = ypos;
+
+		float sensitivity = 0.1f; // change this value to your liking
+		xoffset *= sensitivity;
+		yoffset *= sensitivity;
+
+		yaw += xoffset;
+		pitch += yoffset;
+
+		// make sure that when pitch is out of bounds, screen doesn't get flipped
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		glm::vec3 front;
+		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraFront = glm::normalize(front);
+	}
+	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		fov -= (float)yoffset;
+		if (fov < 1.0f)
+			fov = 1.0f;
+		if (fov > 45.0f)
+			fov = 45.0f;
+	}
+	void processInput(GLFWwindow* window)
+	{
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
+		float cameraSpeed = static_cast<float>(2.5 * m_deltaTime);
+		glm::vec3 newCamPos{};
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			cameraPos += cameraSpeed * cameraFront;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			cameraPos -= cameraSpeed * cameraFront;
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+			cameraPos += glm::vec3{ 0,1,0 }*cameraSpeed;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+			cameraPos -= glm::vec3{ 0,1,0 }*cameraSpeed;
+
+	}
 
 	// Week 01: 
 	// Actual window
@@ -458,14 +690,159 @@ private:
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;
+
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
 	//VkPipeline graphicsPipeline;
 	GP2GraphicsPipeline2D<Vertex2D> m_graphicsPipeline2D;
 	GP2GraphicsPipeline2D<Vertex3D> m_graphicsPipeline3D;
 	VkRenderPass renderPass;
 
+
+
+	std::vector<GP2Buffer> uniformBuffers;
+	std::vector<void*> uniformBuffersMapped;
+
 	void createFrameBuffers();
 	void createRenderPass();
-	void createGraphicsPipeline();
+
+	void createUniformBuffers()
+	{
+		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+		uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			uniformBuffers[i].Initialize(device, physicalDevice, m_commandPool);
+			uniformBuffers[i].CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			vkMapMemory(device, uniformBuffers[i].GetVkDeviceMemory(), 0, bufferSize, 0, &uniformBuffersMapped[i]);
+		}
+	}
+
+	void createDescriptorSetLayout()
+	{
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &uboLayoutBinding;
+
+		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+	}
+	void createDescriptorPool()
+	{
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+
+		if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create descriptor pool!");
+		}
+	}
+	void createDescriptorSets()
+	{
+		std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = descriptorPool;
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		allocInfo.pSetLayouts = layouts.data();
+
+		descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+		if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = uniformBuffers[i].GetVkBuffer();
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(UniformBufferObject);
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = descriptorSets[i];
+			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+			descriptorWrite.pImageInfo = nullptr; // Optional
+			descriptorWrite.pTexelBufferView = nullptr; // Optional
+			vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+		}
+
+	}
+	void updateUniformBuffer(uint32_t currentImage)
+	{
+
+
+		UniformBufferObject ubo{};
+		//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.model = glm::mat4(1.0);
+		ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		ubo.proj = glm::perspective(glm::radians(fov), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
+		ubo.proj[1][1] *= -1;
+
+
+		memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+
+	}
+
+	VkPushConstantRange m_pushConstantRange;
+	void createPushConstantRanges()
+	{
+		//setup push constants
+		VkPushConstantRange pushConstant;
+		//this push constant range starts at the beginning
+		pushConstant.offset = 0;
+		//this push constant range takes up the size of a MeshPushConstants struct
+		pushConstant.size = sizeof(PushConstant);
+		//this push constant range is accessible only in the vertex shader
+		pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		m_pushConstantRange = pushConstant;
+	}
+
+
+	PushConstant updatePushConstants()
+	{
+		static auto startTime = std::chrono::high_resolution_clock::now();
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+		// Calculate light direction based on time
+		float angle = time * 3.141592f * 2.0f; // Full rotation in 24 hours (assuming time is in seconds)
+		float x = 0.0f;
+		float y = 1.0f;
+		float z = 0.0f; // Assuming negative Z is "up" in your world
+
+		// Handle Z-up world
+		glm::vec3 lightDirection = glm::normalize(glm::vec3(x, y, z));
+
+		// Update push constants
+		PushConstant constant;
+		constant.lightDirection = lightDirection;
+		return constant;
+	}
+	//void createGraphicsPipeline();
 
 	// Week 04
 	// Swap chain and image view support

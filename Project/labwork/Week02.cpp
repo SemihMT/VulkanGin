@@ -2,7 +2,6 @@
 
 
 void VulkanBase::recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex) {
-	
 	drawFrame(imageIndex);
 
 }
@@ -47,10 +46,15 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	//Probably not the most efficient way of doing things...
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline2D.VkGraphicsPipeline());
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline2D.GetVkGraphicsPipeline());
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline2D.GetVkPipelineLayout(), 0, 1, &descriptorSets[imageIndex], 0, nullptr);
+	auto constants = updatePushConstants();
+	vkCmdPushConstants(commandBuffer, m_graphicsPipeline2D.GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstant), &constants);
 	drawScene2D();
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.VkGraphicsPipeline());
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkGraphicsPipeline());
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkPipelineLayout(), 0, 1, &descriptorSets[imageIndex], 0, nullptr);
+	vkCmdPushConstants(commandBuffer, m_graphicsPipeline3D.GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstant), &constants);
 	drawScene3D();
 	vkCmdEndRenderPass(commandBuffer);
 }
