@@ -28,19 +28,34 @@ add_custom_target(
 set(SOURCES
     "main.cpp"
     "vulkanbase/VulkanBase.h" 
+	"vulkanbase/VulkanBase.cpp"
     "vulkanbase/VulkanUtil.h"
     "vulkanbase/VulkanUtil.cpp"
+	
     # Add other source files here
-    "labwork/Week01.cpp"
-    "labwork/Week02.cpp" 
-    "labwork/Week03.cpp" 
-    "labwork/Week04.cpp" 
-    "labwork/Week05.cpp"
-    "labwork/Week06.cpp"
+    #"labwork/Week01.cpp"
+    #"labwork/Week02.cpp" 
+    #"labwork/Week03.cpp" 
+    #"labwork/Week04.cpp" 
+    #"labwork/Week05.cpp"
+    #"labwork/Week06.cpp"
     "GP2Shader.h" 
     "GP2Shader.cpp" 
     "GP2CommandPool.h" 
-    "GP2CommandPool.cpp" "GP2CommandBuffer.h" "GP2CommandBuffer.cpp" "GP2VertexBuffer.h" "GP2VertexBuffer.cpp" "GP2Buffer.h" "GP2Buffer.cpp" "GP2IndexBuffer.h" "GP2IndexBuffer.cpp" "GP2Mesh.h" "GP2Mesh.cpp" "GP2GraphicsPipeline2D.h" "GP2GraphicsPipeline2D.cpp")
+    "GP2CommandPool.cpp" 
+	"GP2CommandBuffer.h" 
+	"GP2CommandBuffer.cpp" 
+	"GP2VertexBuffer.h" 
+	"GP2VertexBuffer.cpp" 
+	"GP2Buffer.h" 
+	"GP2Buffer.cpp" 
+	"GP2IndexBuffer.h" 
+	"GP2IndexBuffer.cpp" 
+	"GP2Mesh.h" 
+	"GP2Mesh.cpp" 
+	"GP2GraphicsPipeline2D.h" 
+	"GP2GraphicsPipeline2D.cpp" 
+	)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
