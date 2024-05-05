@@ -44,9 +44,6 @@ void VulkanBase::drawFrame() {
 	uint32_t imageIndex;
 	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-	
-
-
 	//Reset the cmdBuffer - begin of frame
 	m_commandBuffer.Reset();
 	m_commandBuffer.BeginRecording(); //Record to the command buffer
@@ -58,6 +55,8 @@ void VulkanBase::drawFrame() {
 	
 
 	m_commandBuffer.EndRecording();
+
+
 
 	
 	VkSubmitInfo submitInfo{};

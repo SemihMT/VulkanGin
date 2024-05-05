@@ -55,6 +55,7 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkGraphicsPipeline());
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkPipelineLayout(), 0, 1, &descriptorSets[imageIndex], 0, nullptr);
 	vkCmdPushConstants(commandBuffer, m_graphicsPipeline3D.GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstant), &constants);
+
 	drawScene3D();
 	vkCmdEndRenderPass(commandBuffer);
 }

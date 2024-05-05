@@ -23,6 +23,7 @@ add_custom_target(
     DEPENDS ${SPIRV_BINARY_FILES}
 )
 
+ 
 
 set(SOURCES
     "main.cpp"
@@ -44,6 +45,15 @@ set(SOURCES
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
 add_dependencies(${PROJECT_NAME} Shaders)
+
+# Custom command to copy Resources folder
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/Resources
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
+)
+
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES} glfw)
