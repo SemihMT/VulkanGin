@@ -3,7 +3,7 @@
 
 void VulkanBase::Run()
 {
-	initWindow();
+	InitWindow();
 	InitVulkan();
 	MainLoop();
 	Cleanup();
@@ -164,8 +164,6 @@ void VulkanBase::InitVulkan()
 
 
 	// week 06
-
-
 	// createInstance:
 	// Creates the 'Vulkan Instance'; the connection between the application and the Vulkan library.
 	// 1. Creates a 'VkApplicationInfo' struct - this stores extra information about the program that might help the driver optimize
@@ -173,12 +171,12 @@ void VulkanBase::InitVulkan()
 	// 3. Finally Creates the VkInstance object using VkCreateInstance & our CreateInfo struct
 	// The instance will need to be destroyed when quitting the program
 
-	createInstance();
+	CreateInstance();
 
 	// setupDebugMessenger: Does validation layer stuff I don't really want to get into right now :p 
 	//
 
-	setupDebugMessenger();
+	SetupDebugMessenger();
 
 	// createSurface:
 	// Uses GLFW's CreateWindowSurface call to fill a 'VkSurfaceKHR' object
@@ -205,14 +203,14 @@ void VulkanBase::InitVulkan()
 	//	3a. Checks if the device has a queueFamily that supports drawing and one that supports presenting
 	//	3b. Checks if the required extensions are supported by comparing the available extensions of the device with the user defined 'const std::vector<const char*> deviceExtensions'.
 
-	pickPhysicalDevice();
+	PickPhysicalDevice();
 
 
 	// createLogicalDevice:
 	// Creates the 'VkDevice' object that represents the GPU with our preferred features enabled/disabled
 	// Also specifies how many queues of each available queueFamily we want this device to access
 	// For this project, 1 graphics queue and 1 present queue is created and usable by the VkDevice
-	createLogicalDevice();
+	CreateLogicalDevice();
 
 	// week 04
 
@@ -240,7 +238,7 @@ void VulkanBase::InitVulkan()
 	//	  * else: use share them between the queues
 	//  5f. Store handles to the images in 'swapChainImages' for easy retrieval and later use
 	//  5g. Store the image format & extent for later use
-	createSwapChain();
+	CreateSwapChain();
 
 
 	// createImageViews:
@@ -254,7 +252,7 @@ void VulkanBase::InitVulkan()
 	//  3c. Set the subresourceRange field (describes the image's purpose) to use the images as color targets with no mipmapping
 	// 4. Create the VkImageView & store it
 	// *** The image views are resources that we have to explicitly destroy ourselves ***
-	createImageViews();
+	CreateImageViews();
 
 	// week 03
 
@@ -279,7 +277,7 @@ void VulkanBase::InitVulkan()
 	// Sets up the subpass that will render into that attachment with the fragment shader
 	// Creates the renderPass object
 
-	createRenderPass();
+	CreateRenderPass();
 
 	//layout: 
 	CreateDescriptorSetLayout();
@@ -312,10 +310,10 @@ void VulkanBase::InitVulkan()
 	// createFrameBuffers:
 	// This function creates a frame buffer object for each image we have in the swapchain.
 	// These are the link between the attachments and the real images in memory
-	createFrameBuffers();
+	CreateFrameBuffers();
 	// week 02
 
-	m_commandPool.Initialize(device, findQueueFamilies(physicalDevice));
+	m_commandPool.Initialize(device, FindQueueFamilies(physicalDevice));
 	m_commandBuffer = m_commandPool.createCommandBuffer();
 
 	//CreateDepthResources();
@@ -329,7 +327,7 @@ void VulkanBase::InitVulkan()
 	CreateTempMeshes();
 
 	// week 06
-	createSyncObjects();
+	CreateSyncObjects();
 }
 
 void VulkanBase::CalculateDeltaTime()
@@ -357,7 +355,7 @@ void VulkanBase::MainLoop()
 		glfwPollEvents();
 		Update();
 		// week 06
-		drawFrame();
+		DrawFrame();
 	}
 	vkDeviceWaitIdle(device);
 }
@@ -398,7 +396,7 @@ void VulkanBase::Cleanup()
 
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-	if (enableValidationLayers) {
+	if (g_enableValidationLayers) {
 		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 	}
 	vkDestroySwapchainKHR(device, swapChain, nullptr);
@@ -519,7 +517,7 @@ void VulkanBase::ProcessInput(GLFWwindow* window)
 
 }
 
-void VulkanBase::initWindow() {
+void VulkanBase::InitWindow() {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -533,7 +531,7 @@ void VulkanBase::initWindow() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void VulkanBase::drawScene2D() {
+void VulkanBase::DrawScene2D() {
 	//Replace with actual scene drawing code
 	//foreach mesh in m_Scenes.current -> draw
 	//vkCmdDrawIndexed(m_commandBuffer.GetVkCommandBuffer(), static_cast<uint32_t>(indices.size()), 1, 0, 0,0);
@@ -544,7 +542,7 @@ void VulkanBase::drawScene2D() {
 	}
 }
 
-void VulkanBase::drawScene3D() {
+void VulkanBase::DrawScene3D() {
 	//Replace with actual scene drawing code
 	//foreach mesh in m_Scenes.current -> draw
 	//vkCmdDrawIndexed(m_commandBuffer.GetVkCommandBuffer(), static_cast<uint32_t>(indices.size()), 1, 0, 0,0);
@@ -557,12 +555,12 @@ void VulkanBase::drawScene3D() {
 
 
 
-void VulkanBase::recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex) {
-	drawFrame(imageIndex);
+void VulkanBase::RecordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex) {
+	DrawFrame(imageIndex);
 
 }
 
-void VulkanBase::drawFrame(uint32_t imageIndex) {
+void VulkanBase::DrawFrame(uint32_t imageIndex) {
 
 	//This function should get factorized into each separate
 	//element's setup or something
@@ -606,17 +604,17 @@ void VulkanBase::drawFrame(uint32_t imageIndex) {
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline2D.GetVkPipelineLayout(), 0, 1, &descriptorSets[imageIndex], 0, nullptr);
 	auto constants = UpdatePushConstants();
 	vkCmdPushConstants(commandBuffer, m_graphicsPipeline2D.GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstant), &constants);
-	drawScene2D();
+	DrawScene2D();
 
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkGraphicsPipeline());
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline3D.GetVkPipelineLayout(), 0, 1, &descriptorSets[imageIndex], 0, nullptr);
 	vkCmdPushConstants(commandBuffer, m_graphicsPipeline3D.GetVkPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstant), &constants);
 
-	drawScene3D();
+	DrawScene3D();
 	vkCmdEndRenderPass(commandBuffer);
 }
 
-QueueFamilyIndices VulkanBase::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice device) {
 	QueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;
@@ -638,7 +636,7 @@ QueueFamilyIndices VulkanBase::findQueueFamilies(VkPhysicalDevice device) {
 			indices.presentFamily = i;
 		}
 
-		if (indices.isComplete()) {
+		if (indices.IsComplete()) {
 			break;
 		}
 
@@ -649,7 +647,7 @@ QueueFamilyIndices VulkanBase::findQueueFamilies(VkPhysicalDevice device) {
 }
 
 
-void VulkanBase::createFrameBuffers() {
+void VulkanBase::CreateFrameBuffers() {
 	//Resize the vector that holds the framebuffers
 	//we need one for each image in our swapchain
 	swapChainFramebuffers.resize(swapChainImageViews.size());
@@ -676,7 +674,7 @@ void VulkanBase::createFrameBuffers() {
 
 
 
-void VulkanBase::createRenderPass() {
+void VulkanBase::CreateRenderPass() {
 	//Color attachment.This is the description of the image we will be writing into with rendering commands.
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat; //rendering the image should be compliant with the swapchain
@@ -971,7 +969,7 @@ PushConstant VulkanBase::UpdatePushConstants()
 //}
 
 
-SwapChainSupportDetails VulkanBase::querySwapChainSupport(VkPhysicalDevice device) {
+SwapChainSupportDetails VulkanBase::QuerySwapChainSupport(VkPhysicalDevice device) {
 
 	//Fill in the VkSurfaceCapabilitiesKHR struct inside SwapChainSupportDetails
 	SwapChainSupportDetails details;
@@ -1000,7 +998,7 @@ SwapChainSupportDetails VulkanBase::querySwapChainSupport(VkPhysicalDevice devic
 
 //Function that will choose the appropriate surface format
 //For us that is preferably one that stores 32 bits per pixel in SRGB color space
-VkSurfaceFormatKHR VulkanBase::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR VulkanBase::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;
@@ -1010,7 +1008,7 @@ VkSurfaceFormatKHR VulkanBase::chooseSwapSurfaceFormat(const std::vector<VkSurfa
 	return availableFormats[0];
 }
 
-VkPresentModeKHR VulkanBase::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+VkPresentModeKHR VulkanBase::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
@@ -1020,7 +1018,7 @@ VkPresentModeKHR VulkanBase::chooseSwapPresentMode(const std::vector<VkPresentMo
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VulkanBase::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+VkExtent2D VulkanBase::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)()) {
 		return capabilities.currentExtent;
 	}
@@ -1040,12 +1038,12 @@ VkExtent2D VulkanBase::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabili
 	}
 }
 
-void VulkanBase::createSwapChain() {
-	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+void VulkanBase::CreateSwapChain() {
+	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
-	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+	VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
 	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -1063,7 +1061,7 @@ void VulkanBase::createSwapChain() {
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	if (indices.graphicsFamily != indices.presentFamily) {
@@ -1094,7 +1092,7 @@ void VulkanBase::createSwapChain() {
 	swapChainExtent = extent;
 }
 
-void VulkanBase::createImageViews() {
+void VulkanBase::CreateImageViews() {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -1120,7 +1118,7 @@ void VulkanBase::createImageViews() {
 }
 
 
-void VulkanBase::pickPhysicalDevice() {
+void VulkanBase::PickPhysicalDevice() {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -1136,7 +1134,7 @@ void VulkanBase::pickPhysicalDevice() {
 	}
 
 	for (const auto& device : devices) {
-		if (isDeviceSuitable(device)) {
+		if (IsDeviceSuitable(device)) {
 			physicalDevice = device;
 			break;
 		}
@@ -1147,18 +1145,18 @@ void VulkanBase::pickPhysicalDevice() {
 	}
 }
 
-bool VulkanBase::isDeviceSuitable(VkPhysicalDevice device) {
+bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice device) {
 
-	QueueFamilyIndices indices = findQueueFamilies(device);
-	bool extensionsSupported = checkDeviceExtensionSupport(device);
+	QueueFamilyIndices indices = FindQueueFamilies(device);
+	bool extensionsSupported = CheckDeviceExtensionSupport(device);
 	//If there is a queue for drawing & presenting + all the extensions we need are supported : DEVICE IS SUITABLE
-	return indices.isComplete() && extensionsSupported;
+	return indices.IsComplete() && extensionsSupported;
 
 }
 
-void VulkanBase::createLogicalDevice() {
+void VulkanBase::CreateLogicalDevice() {
 	//Find the queueFamilies we need (graphics & present)
-	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -1191,7 +1189,7 @@ void VulkanBase::createLogicalDevice() {
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-	if (enableValidationLayers) {
+	if (g_enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
 	}
@@ -1209,27 +1207,32 @@ void VulkanBase::createLogicalDevice() {
 }
 
 
-void VulkanBase::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void VulkanBase::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+{
+
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	//Specify the severity we want the callback to be called for
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	//Specify which types of messages the callback is notified about
 	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	createInfo.pfnUserCallback = debugCallback;
+
+	createInfo.pfnUserCallback = DebugCallback;
 }
 
 
-void VulkanBase::setupDebugMessenger() {
-	if (!enableValidationLayers) return;
+void VulkanBase::SetupDebugMessenger() {
+	if (!g_enableValidationLayers) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
-	populateDebugMessengerCreateInfo(createInfo);
+	PopulateDebugMessengerCreateInfo(createInfo);
 
 	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
 		throw std::runtime_error("failed to set up debug messenger!");
 	}
 }
 
-void VulkanBase::createSyncObjects() {
+void VulkanBase::CreateSyncObjects() {
 	VkSemaphoreCreateInfo semaphoreInfo{};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -1245,7 +1248,7 @@ void VulkanBase::createSyncObjects() {
 
 }
 
-void VulkanBase::drawFrame() {
+void VulkanBase::DrawFrame() {
 	vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
 	vkResetFences(device, 1, &inFlightFence);
 
@@ -1258,14 +1261,12 @@ void VulkanBase::drawFrame() {
 	m_commandBuffer.BeginRecording(); //Record to the command buffer
 
 
-	recordCommandBuffer(m_commandBuffer, imageIndex); // calls drawFrame
+	RecordCommandBuffer(m_commandBuffer, imageIndex); // calls drawFrame
 
 	UpdateUniformBuffer(imageIndex);
 
 
 	m_commandBuffer.EndRecording();
-
-
 
 
 	VkSubmitInfo submitInfo{};
@@ -1303,7 +1304,17 @@ void VulkanBase::drawFrame() {
 	vkQueuePresentKHR(presentQueue, &presentInfo);
 }
 
-bool checkValidationLayerSupport() {
+VkBool32 VulkanBase::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+{
+	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+	return VK_FALSE;
+}
+
+
+// Validation Layer Support:
+bool CheckValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -1327,22 +1338,31 @@ bool checkValidationLayerSupport() {
 
 	return true;
 }
+///////////////////////////////////////////////////////////////
 
-std::vector<const char*> VulkanBase::getRequiredExtensions() {
+
+
+// Extension Support:
+
+std::vector<const char*> VulkanBase::GetRequiredExtensions()
+{
+	//The GLFW Vulkan extensions are required because we use that for window and surface support
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-	if (enableValidationLayers) {
+	//If we want to have a custom callback for debug messages, we need the following extension
+	if (g_enableValidationLayers)
+	{
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
 
 	return extensions;
 }
 
-bool VulkanBase::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool VulkanBase::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
 
 	//Get # of extensions
 	uint32_t extensionCount;
@@ -1351,6 +1371,13 @@ bool VulkanBase::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	//Get and store the extensions themselves
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+
+	//Print the available extensions
+	std::cout << "available extensions:\n";
+	for (const auto& extension : availableExtensions) {
+		std::cout << '\t' << extension.extensionName << '\n';
+	}
 
 	//Create a unique buffer of the required extensions (user defined?) names
 	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
@@ -1364,39 +1391,47 @@ bool VulkanBase::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	//else FALSE
 	return requiredExtensions.empty();
 }
+////////////////////////////////////////////////////////////////////
 
-void VulkanBase::createInstance() {
-	if (enableValidationLayers && !checkValidationLayerSupport()) {
+// Create the VkInstance
+void VulkanBase::CreateInstance()
+{
+	// If we want validation layers but there is no support for them -> ERROR
+	if (g_enableValidationLayers && !CheckValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
 	}
 
+	//Technically optional info, but may provide optimizations if the engine is well-known 
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = "Hello Triangle";
+	appInfo.pApplicationName = "VoxelEngine";
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.pEngineName = "No Engine";
+	appInfo.pEngineName = "543Engine";
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
+
+	//Tell the VkInstance which extensions & validation layers we want to use
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
 
-	auto extensions = getRequiredExtensions();
+	auto extensions = GetRequiredExtensions();
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	if (enableValidationLayers) {
+	if (g_enableValidationLayers) 
+	{
+
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
 
-		populateDebugMessengerCreateInfo(debugCreateInfo);
+		PopulateDebugMessengerCreateInfo(debugCreateInfo);
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 	}
 	else {
 		createInfo.enabledLayerCount = 0;
-
 		createInfo.pNext = nullptr;
 	}
 

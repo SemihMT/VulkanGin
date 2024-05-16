@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <stb_image.h>
+
 #include "VulkanUtil.h"
 
 #include <iostream>
@@ -32,9 +34,6 @@
 #include "GP2VertexBuffer.h"
 
 
-const std::vector<const char*> validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-};
 
 const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -49,27 +48,6 @@ struct SwapChainSupportDetails {
 };
 
 
-
-
-////Temporary vertex buffer
-//const std::vector<Vertex2D> vertices = {
-//	   {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-//	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-//	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-//	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-//
-//	{{-0.5f + 0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
-//	{{0.5f + 0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-//	{{0.5f + 0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-//	{{-0.5f + 0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-//
-//};
-//
-//const std::vector<uint16_t> indices = {
-//	0, 1, 2, 2, 3, 0,
-//	4, 5, 6, 6, 7, 4
-//};
-
 class VulkanBase {
 public:
 	void Run();
@@ -78,11 +56,14 @@ private:
 
 	void CreateTempMeshes();
 
-
+	GLFWwindow* window;
+	void InitWindow();
 	void InitVulkan();
+	void MainLoop();
+	void Cleanup();
+
 	std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTime{};
 	double m_deltaTime{};
-
 	void CalculateDeltaTime();
 
 
@@ -100,10 +81,6 @@ private:
 
 	void Update();
 
-	void MainLoop();
-
-	void Cleanup();
-
 
 	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
@@ -111,7 +88,18 @@ private:
 
 	bool HasStencilComponent(VkFormat format);
 
-	/*void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+	void CreateTextureImage() {
+		int texWidth, texHeight, texChannels;
+		stbi_uc* pixels = stbi_load("Resources/Textures/statue.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+		if (!pixels) {
+			throw std::runtime_error("failed to load texture image!");
+		}
+	}
+
+
+	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -137,7 +125,7 @@ private:
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+		//allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
 		if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate image memory!");
@@ -151,11 +139,11 @@ private:
 	VkImageView depthImageView;
 	void CreateDepthResources()
 	{
-		VkFormat depthFormat = findDepthFormat();
+		VkFormat depthFormat = FindDepthFormat();
 
-		createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-		depthImageView = createImageView(depthImage, depthFormat);
-	}*/
+		CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+		//depthImageView = CreateImageView(depthImage, depthFormat);
+	}
 
 
 	void CreateSurface();
@@ -181,11 +169,9 @@ private:
 	// These 5 functions should be refactored into a separate C++ class
 	// with the correct internal state.
 
-	GLFWwindow* window;
-	void initWindow();
-	void drawScene2D();
-	void drawScene3D();
-	void drawScene();
+	
+	void DrawScene2D();
+	void DrawScene3D();
 
 	// Week 02
 	// Queue families
@@ -197,10 +183,10 @@ private:
 	//VkCommandPool commandPool;
 	//VkCommandBuffer commandBuffer;
 
-	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
-	void drawFrame(uint32_t imageIndex);
-	void recordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex);
+	void DrawFrame(uint32_t imageIndex);
+	void RecordCommandBuffer(GP2CommandBuffer commandBuffer, uint32_t imageIndex);
 
 	// Week 03
 	// Renderpass concept
@@ -223,8 +209,8 @@ private:
 	std::vector<GP2Buffer> uniformBuffers;
 	std::vector<void*> uniformBuffersMapped;
 
-	void createFrameBuffers();
-	void createRenderPass();
+	void CreateFrameBuffers();
+	void CreateRenderPass();
 
 	void CreateUniformBuffers();
 
@@ -254,12 +240,12 @@ private:
 
 	std::vector<VkImageView> swapChainImageViews;
 
-	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-	void createSwapChain();
-	void createImageViews();
+	SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	void CreateSwapChain();
+	void CreateImageViews();
 
 	// Week 05 
 	// Logical and physical device
@@ -268,14 +254,16 @@ private:
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 
-	void pickPhysicalDevice();
-	bool isDeviceSuitable(VkPhysicalDevice device);
-	void createLogicalDevice();
+	void PickPhysicalDevice();
+	bool IsDeviceSuitable(VkPhysicalDevice device);
+	void CreateLogicalDevice();
 
 	// Week 06
 	// Main initialization
 
 	VkInstance instance;
+	void CreateInstance();
+
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkDevice device = VK_NULL_HANDLE;
 	VkSurfaceKHR surface;
@@ -284,18 +272,16 @@ private:
 	VkSemaphore renderFinishedSemaphore;
 	VkFence inFlightFence;
 
-	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void setupDebugMessenger();
-	std::vector<const char*> getRequiredExtensions();
-	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-	void createInstance();
+	void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void SetupDebugMessenger();
+	std::vector<const char*> GetRequiredExtensions();
+	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+	
 
-	void createSyncObjects();
-	void drawFrame();
+	void CreateSyncObjects();
+	void DrawFrame();
 
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-		std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-		return VK_FALSE;
-	}
+	//debug callback function that's used by vulkan
+	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 };
 #endif // VULKANBASE_H

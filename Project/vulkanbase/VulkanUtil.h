@@ -8,20 +8,28 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <optional>
 #include <GLFW/glfw3native.h>
-
-constexpr uint32_t WIDTH = 800;
-constexpr uint32_t HEIGHT = 600;
-constexpr int MAX_FRAMES_IN_FLIGHT = 3;
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
-
 #include <vector>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <array>
+
+
+
+constexpr uint32_t WIDTH = 800;
+constexpr uint32_t HEIGHT = 600;
+constexpr int MAX_FRAMES_IN_FLIGHT = 3;
+
+
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KHRONOS_validation"
+};
+
+#ifdef NDEBUG
+const bool g_enableValidationLayers = false;
+#else
+constexpr bool g_enableValidationLayers = true;
+#endif
+
 
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
@@ -30,11 +38,13 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 std::vector<char> readFile(const std::string& filename);
 
+//This struct stores the index to the queue families that support the types of commands we'll be using for the program
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
 	std::optional<uint32_t> presentFamily;
 
-	bool isComplete() {
+	bool IsComplete() const
+	{
 		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
 };

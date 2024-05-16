@@ -27,6 +27,7 @@ add_custom_target(
 
 set(SOURCES
     "main.cpp"
+	"stb_image.h"
     "vulkanbase/VulkanBase.h" 
 	"vulkanbase/VulkanBase.cpp"
     "vulkanbase/VulkanUtil.h"
@@ -55,7 +56,29 @@ set(SOURCES
 	"GP2Mesh.cpp" 
 	"GP2GraphicsPipeline2D.h" 
 	"GP2GraphicsPipeline2D.cpp" 
-	)
+    ##Restructuring:
+	"vxl_Window.h"
+    "vxl_Window.cpp"
+    "vxl_App.h"
+    "vxl_App.cpp"
+    "vxl_GraphicsPipeline.h"
+    "vxl_GraphicsPipeline.cpp"
+    "vxl_Device.h"
+    "vxl_Device.cpp"
+    "vxl_SwapChain.h"
+    "vxl_SwapChain.cpp"
+    "vxl_Model.h"
+    "vxl_Model.cpp"
+    "vxl_Utils.h"
+    "vxl_Utils.cpp"
+
+    "vxl_GraphicsPipeline3D.h"
+    "vxl_GraphicsPipeline3D.cpp"
+    "vxl_SwapChain3D.h"
+    "vxl_SwapChain3D.cpp"
+    "vxl_Model3D.h"
+    "vxl_Model3D.cpp"
+ "vxl_UBO.h" "vxl_UBO.cpp")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
