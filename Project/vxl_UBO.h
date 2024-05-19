@@ -8,6 +8,11 @@
 
 namespace vxl
 {
+	class vxlCamera;
+}
+
+namespace vxl
+{
 	class vxlUBO
 	{
 	public:
@@ -30,9 +35,13 @@ namespace vxl
 
 		VkDescriptorSetLayout GetDescriptorSetLayout() { return m_descriptorSetLayout; }
 		void Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t currentFrame);
-		void UpdateUBO(uint32_t currentImage, VkExtent2D extent);
+		void UpdateUBO(uint32_t currentImage, VkExtent2D extent, const vxlCamera& camera);
 
 	private:
+		void CreateTextureImage();
+		void CreateTextureImageView();
+		void CreateTextureSampler();
+
 
 		void CreateDescriptorSetLayout();
 		void CreateUniformBuffers();
@@ -40,6 +49,11 @@ namespace vxl
 		void CreateDescriptorSets();
 
 		vxlDevice& m_device;
+
+		VkImage m_textureImage;
+		VkDeviceMemory m_textureImageMemory;
+		VkImageView m_textureImageView;
+		VkSampler m_textureSampler;
 
 		VkDescriptorPool m_descriptorPool;
 		std::vector<VkDescriptorSet> m_descriptorSets;

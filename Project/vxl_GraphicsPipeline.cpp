@@ -46,8 +46,8 @@ namespace vxl
 		config.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
 		config.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
 		config.rasterizationInfo.lineWidth = 1.0f;
-		config.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
-		config.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		config.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+		config.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		config.rasterizationInfo.depthBiasEnable = VK_FALSE;
 		config.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
 		config.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional

@@ -67,17 +67,7 @@ private:
 	void CalculateDeltaTime();
 
 
-	// camera
-	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-	inline static glm::vec3 cameraFront{ glm::vec3(0.0f, 0.0f, -1.0f) };
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-	inline static bool firstMouse = true;
-	inline static float yaw = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-	inline static float pitch = 0.0f;
-	inline static float lastX = WIDTH / 2.0;
-	inline static float lastY = HEIGHT / 2.0;
-	inline static float fov = 45.0f;
+	
 
 	void Update();
 
@@ -96,6 +86,11 @@ private:
 		if (!pixels) {
 			throw std::runtime_error("failed to load texture image!");
 		}
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+
 	}
 
 

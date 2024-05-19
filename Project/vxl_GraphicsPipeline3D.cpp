@@ -3,6 +3,8 @@
 #include <fstream>
 #include <cassert>
 
+#include "vxl_Chunk.h"
+
 namespace vxl
 {
 
@@ -46,7 +48,7 @@ namespace vxl
 		config.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
 		config.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
 		config.rasterizationInfo.lineWidth = 1.0f;
-		config.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
+		config.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 		config.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		config.rasterizationInfo.depthBiasEnable = VK_FALSE;
 		config.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
@@ -165,8 +167,8 @@ namespace vxl
 		//Bindings: spacing between data and whether the data is per - vertex or per - instance(see instancing)
 		//Attribute descriptions: type of the attributes passed to the vertex shader, which binding to load them from and at which offset
 
-		const auto bindingDescriptions = vxlModel3D::Vertex3D::GetBindingDescriptions();
-		const auto attributeDescriptions = vxlModel3D::Vertex3D::GetAttributeDescriptions();
+		const auto bindingDescriptions = vxlChunk::Vertex3D::GetBindingDescriptions();
+		const auto attributeDescriptions = vxlChunk::Vertex3D::GetAttributeDescriptions();
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

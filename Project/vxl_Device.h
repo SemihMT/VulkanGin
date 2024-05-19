@@ -50,7 +50,7 @@ namespace vxl
 		VkSurfaceKHR GetSurface() const { return m_surface; }
 		VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
 		VkQueue GetPresentQueue() const { return m_presentQueue; }
-
+		VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return m_properties; }
 		//Query functions
 		SwapChainSupportDetails GetSwapChainSupport() { return QuerySwapChainSupport(m_physicalDevice); }
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -72,12 +72,26 @@ namespace vxl
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
 		void CleanupBuffer(VkBuffer buffer, VkDeviceMemory bufferMemory);
 
-		//Image helper
+		//Image helpers
+		void CreateImage(
+			uint32_t width,
+			uint32_t height,
+			VkFormat format,
+			VkImageTiling tiling,
+			VkImageUsageFlags usage,
+			VkMemoryPropertyFlags properties,
+			VkImage& image,
+			VkDeviceMemory& imageMemory);
+
 		void CreateImageWithInfo(
 			const VkImageCreateInfo& imageInfo,
 			VkMemoryPropertyFlags properties,
 			VkImage& image,
 			VkDeviceMemory& imageMemory);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+		VkImageView CreateImageView(VkImage image, VkFormat format);
+
 
 	private:
 		VkPhysicalDeviceProperties m_properties;

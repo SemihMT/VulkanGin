@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include "vxl_app.h"
 
 #include <array>
@@ -10,38 +12,54 @@ namespace vxl
 {
 	vxlApp::vxlApp()
 	{
-		LoadModels();
+
 		CreateUBO();
 		CreatePipelineLayout();
 		RecreateSwapChain();
 		CreateCommandBuffers();
+		LoadModels();
 	}
 
 	vxlApp::~vxlApp()
 	{
 		vkDestroyPipelineLayout(m_vxlDevice.GetDevice(), m_pipelineLayout, nullptr);
-		vkDestroyPipelineLayout(m_vxlDevice.GetDevice(), m_pipelineLayout3D,nullptr);
+		vkDestroyPipelineLayout(m_vxlDevice.GetDevice(), m_pipelineLayout3D, nullptr);
+
+		
 	}
 
 	void vxlApp::Run()
 	{
+		using namespace std::chrono;
+		using clock = steady_clock;
+
+		auto lastFrameTime = clock::now();
 		while (!m_vxlWindow.ShouldClose())
 		{
+			auto currentFrameTime = clock::now();
+			duration<float> deltaTime = duration_cast<duration<float>>(currentFrameTime - lastFrameTime);
+			lastFrameTime = currentFrameTime;
+
 			glfwPollEvents();
+			m_vxlCamera.Update(deltaTime.count());
 			DrawFrame();
 		}
 		vkDeviceWaitIdle(m_vxlDevice.GetDevice());
 	}
 
+	
+
+	
+
 	void vxlApp::LoadModels()
 	{
-	/*	std::vector<vxlModel::Vertex> vertices
-		{
-		{{-0.5f, 0.8f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.8f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 1.f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 1.f}, {1.0f, 1.0f, 1.0f}}
-		};*/
+		/*	std::vector<vxlModel::Vertex> vertices
+			{
+			{{-0.5f, 0.8f}, {1.0f, 0.0f, 0.0f}},
+			{{0.5f, 0.8f}, {0.0f, 1.0f, 0.0f}},
+			{{0.5f, 1.f}, {0.0f, 0.0f, 1.0f}},
+			{{-0.5f, 1.f}, {1.0f, 1.0f, 1.0f}}
+			};*/
 
 		std::vector<vxlModel::Vertex> vertices
 		{
@@ -51,94 +69,94 @@ namespace vxl
 		{ScreenSpaceToNDC({600,100},WIDTH,HEIGHT), {1.0f, 1.0f, 1.0f}}
 		};
 
-		const std::vector<uint32_t> indices = 
+		const std::vector<uint32_t> indices =
 		{
 			0, 1, 2, 2, 3, 0
 		};
 
-		m_vxlModel = std::make_unique<vxlModel>(m_vxlDevice, vertices,indices);
+		m_vxlModel = std::make_unique<vxlModel>(m_vxlDevice, vertices, indices);
 
 
-		std::vector<vxlModel3D::Vertex3D> vertices3D
-		{
-			// left face (white)
-			 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-			 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-			 {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-			 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-			 {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-			 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+		//std::vector<vxlModel3D::Vertex3D> vertices3D
+		//{
+		//	// left face (white)
+		//	 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+		//	 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+		//	 {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+		//	 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+		//	 {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+		//	 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
 
-			 // right face (yellow)
-			 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-			 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-			 {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-			 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-			 {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-			 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+		//	 // right face (yellow)
+		//	 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+		//	 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+		//	 {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+		//	 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+		//	 {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+		//	 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
 
-			 // top face (orange, remember y axis points down)
-			 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			 {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			 {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		//	 // top face (orange, remember y axis points down)
+		//	 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		//	 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		//	 {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		//	 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		//	 {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		//	 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
 
-			 // bottom face (red)
-			 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-			 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-			 {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-			 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-			 {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-			 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		//	 // bottom face (red)
+		//	 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		//	 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		//	 {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		//	 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		//	 {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		//	 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
 
-			 // nose face (blue)
-			 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			 {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			 {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 // nose face (blue)
+		//	 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		//	 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
 
-			 // tail face (green)
-			 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			 {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			 {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-		};
+		//	 // tail face (green)
+		//	 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		//	 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+		//	 {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+		//	 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		//	 {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		//	 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+		//};
 
-		const std::vector<unsigned int> indices3D = {
-			// Left face (white)
-			0, 1, 2,
-			3, 4, 5,
+		//const std::vector<unsigned int> indices3D = {
+		//	// Left face (white)
+		//	0, 1, 2,
+		//	3, 4, 5,
 
-			// Right face (yellow)
-			6, 7, 8,
-			9, 10, 11,
+		//	// Right face (yellow)
+		//	6, 7, 8,
+		//	9, 10, 11,
 
-			// Top face (orange)
-			12, 13, 14,
-			15, 16, 17,
+		//	// Top face (orange)
+		//	12, 13, 14,
+		//	15, 16, 17,
 
-			// Bottom face (red)
-			18, 19, 20,
-			21, 22, 23,
+		//	// Bottom face (red)
+		//	18, 19, 20,
+		//	21, 22, 23,
 
-			// Nose face (blue)
-			24, 25, 26,
-			27, 28, 29,
+		//	// Nose face (blue)
+		//	24, 25, 26,
+		//	27, 28, 29,
 
-			// Tail face (green)
-			30, 31, 32,
-			33, 34, 35
-		};
+		//	// Tail face (green)
+		//	30, 31, 32,
+		//	33, 34, 35
+		//};
 
-		m_vxlModel3D = std::make_unique<vxlModel3D>(m_vxlDevice, vertices3D, indices3D);
+		//m_vxlModel3D = std::make_unique<vxlModel3D>(m_vxlDevice, vertices3D, indices3D);
+		m_vxlChunk = std::make_unique<vxlChunk>(m_vxlDevice);
 	}
-
 	void vxlApp::CreateUBO()
 	{
 		m_vxlUBO = std::make_unique<vxlUBO>(m_vxlDevice);
@@ -230,7 +248,7 @@ namespace vxl
 	{
 		uint32_t imageIdx;
 		auto result = m_vxlSwapChain->AcquireNextImage(&imageIdx);
-		m_vxlUBO->UpdateUBO(m_vxlSwapChain->GetCurrentFrame(), m_vxlSwapChain->GetSwapChainExtent());
+		m_vxlUBO->UpdateUBO(static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()), m_vxlSwapChain->GetSwapChainExtent(), m_vxlCamera);
 
 		//VK_ERROR_OUT_OF_DATE_KHR: A surface has changed in such a way that it is no longer compatible with the current swapchain
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -334,9 +352,11 @@ namespace vxl
 
 		m_vxlGraphicsPipeline3D->Bind(m_commandBuffers[imageIdx]);
 
-		m_vxlModel3D->Bind(m_commandBuffers[imageIdx]);
-		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout3D, m_vxlSwapChain->GetCurrentFrame());
-		m_vxlModel3D->Draw(m_commandBuffers[imageIdx]);
+		//m_vxlModel3D->Bind(m_commandBuffers[imageIdx]);
+		m_vxlChunk->Bind(m_commandBuffers[imageIdx]);
+		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout3D, static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()));
+		m_vxlChunk->Draw(m_commandBuffers[imageIdx]);
+		//m_vxlModel3D->Draw(m_commandBuffers[imageIdx]);
 
 		vkCmdEndRenderPass(m_commandBuffers[imageIdx]);
 
@@ -349,7 +369,7 @@ namespace vxl
 		renderPassBeginInfo.renderArea.offset = { 0,0 };
 		renderPassBeginInfo.renderArea.extent = m_vxlSwapChain->GetSwapChainExtent();
 
-		
+
 		renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassBeginInfo.pClearValues = clearValues.data();
 
@@ -364,37 +384,6 @@ namespace vxl
 		m_vxlModel->Draw(m_commandBuffers[imageIdx]);
 
 		vkCmdEndRenderPass(m_commandBuffers[imageIdx]);
-
-		//// Transition resources for the second render pass
-		//VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		//VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		//VkDependencyFlags dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-		//VkImageMemoryBarrier barrier{};
-		//barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		//barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		//barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		//barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		//barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		//barrier.image = m_vxlSwapChain->GetSwapChainImages()[imageIdx];
-		//barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		//barrier.subresourceRange.baseMipLevel = 0;
-		//barrier.subresourceRange.levelCount = 1;
-		//barrier.subresourceRange.baseArrayLayer = 0;
-		//barrier.subresourceRange.layerCount = 1;
-		//barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		//barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-
-		//vkCmdPipelineBarrier(
-		//	m_commandBuffers[imageIdx],
-		//	srcStage, dstStage,
-		//	dependencyFlags,
-		//	0, nullptr,
-		//	0, nullptr,
-		//	1, &barrier
-		//);
-
-		
 
 		if (vkEndCommandBuffer(m_commandBuffers[imageIdx]) != VK_SUCCESS)
 		{

@@ -8,6 +8,8 @@
 #include <memory>
 #include <vector>
 
+#include "vxl_Camera.h"
+#include "vxl_Chunk.h"
 #include "vxl_GraphicsPipeline3D.h"
 #include "vxl_Model3D.h"
 #include "vxl_UBO.h"
@@ -30,6 +32,7 @@ namespace vxl
 
 		void Run();
 	private:
+
 		void LoadModels();
 
 		void CreateUBO();
@@ -37,14 +40,15 @@ namespace vxl
 		void CreatePipeline();
 		void CreateCommandBuffers();
 		void FreeCommandBuffers();
-		void UpdateUniformBuffer(uint32_t currentImage);
 		void DrawFrame();
 		void RecreateSwapChain();
 		void RecordCommandBuffer(int imageIdx);
 
 
 		vxlWindow m_vxlWindow{ WIDTH, HEIGHT, "vxlEngine" };
+		vxlCamera m_vxlCamera{ m_vxlWindow };
 		vxlDevice m_vxlDevice{ m_vxlWindow };
+
 		std::unique_ptr<vxlSwapChain> m_vxlSwapChain{ nullptr };
 		std::unique_ptr<vxlGraphicsPipeline> m_vxlGraphicsPipeline{ nullptr };
 		std::unique_ptr<vxlGraphicsPipeline3D> m_vxlGraphicsPipeline3D{ nullptr };
@@ -56,6 +60,7 @@ namespace vxl
 		std::vector<VkCommandBuffer> m_commandBuffers;
 		std::unique_ptr<vxlModel> m_vxlModel{ nullptr };
 		std::unique_ptr<vxlModel3D> m_vxlModel3D{ nullptr };
+		std::unique_ptr<vxlChunk> m_vxlChunk{ nullptr };
 
 		std::unique_ptr<vxlUBO> m_vxlUBO;
 	};

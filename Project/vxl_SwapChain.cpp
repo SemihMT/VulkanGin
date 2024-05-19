@@ -206,26 +206,7 @@ namespace vxl
 		m_swapChainImageViews.resize(m_swapChainImages.size());
 
 		for (size_t i = 0; i < m_swapChainImages.size(); i++) {
-			VkImageViewCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = m_swapChainImages[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = m_swapChainImageFormat;
-
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; //The components field allows you to swizzle the color channels around.
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; //For example, you can map all of the channels to the red channel for a monochrome texture
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY; //You can also map constant values of 0 and 1 to a channel. 
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY; //In our case we'll stick to the default mapping.
-
-			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.subresourceRange.baseMipLevel = 0;
-			createInfo.subresourceRange.levelCount = 1;
-			createInfo.subresourceRange.baseArrayLayer = 0;
-			createInfo.subresourceRange.layerCount = 1;
-
-			if (vkCreateImageView(m_device.GetDevice(), &createInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create image views!");
-			}
+			m_swapChainImageViews[i] = m_device.CreateImageView(m_swapChainImages[i], m_swapChainImageFormat);
 		}
 	}
 

@@ -18,6 +18,7 @@ namespace vxl
 		{
 			glm::vec2 position;
 			glm::vec3 color;
+			glm::vec2 texCoord;
 
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
