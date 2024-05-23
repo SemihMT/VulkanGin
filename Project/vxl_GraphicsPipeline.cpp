@@ -62,17 +62,17 @@ namespace vxl
 		config.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
 		config.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
 
-		// BLENDING
+		// BLENDING - Default = alpha blend with transparency
 		config.colorBlendAttachment.colorWriteMask =
 			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
 			VK_COLOR_COMPONENT_A_BIT;
-		config.colorBlendAttachment.blendEnable = VK_FALSE;
-		config.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		config.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		config.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
-		config.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		config.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		config.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
+		config.colorBlendAttachment.blendEnable = VK_TRUE;
+		config.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		config.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		config.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		config.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		config.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		config.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		config.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		config.colorBlendInfo.logicOpEnable = VK_FALSE;
@@ -192,7 +192,7 @@ namespace vxl
 		pipelineInfo.basePipelineIndex = -1;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-		if(vkCreateGraphicsPipelines(m_device.GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
+		if (vkCreateGraphicsPipelines(m_device.GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create graphics pipeline");
 		}

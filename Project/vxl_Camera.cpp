@@ -4,7 +4,7 @@
 
 vxl::vxlCamera::vxlCamera(vxlWindow& window) :
 	m_window(window),
-	m_cameraPos{ glm::vec3{0.0f,0.0f,0.0f} },
+	m_cameraPos{ glm::vec3{0.0f,104.0f,0.0f} },
 	m_cameraFront{ glm::vec3(0.0f, 0.0f, -1.0f) },
 	m_cameraUp{ glm::vec3(0.0f, 1.0f, 0.0f) },
 	m_firstMouse{ true },

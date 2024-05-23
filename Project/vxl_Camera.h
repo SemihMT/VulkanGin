@@ -24,7 +24,10 @@ namespace vxl
 		void OnKeyPress(int key, int scancode, int action, int mods);
 		void Update(float deltaTime);
 		glm::mat4 GetViewMatrix() const { return lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp); }
+		glm::vec3 GetPosition() const { return m_cameraPos; }
+
 		float GetFOV() const { return m_fov; }
+
 
 
 	private:

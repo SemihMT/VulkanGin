@@ -16,8 +16,12 @@
 vxl::vxlUBO::vxlUBO(vxlDevice& device) :
 	m_device(device)
 {
-	CreateTextureImage();
-	CreateTextureImageView();
+	CreateTextureImage("Resources/Textures/TextureAtlas-BlocksOnly.png", m_textureImage3D,m_textureImageMemory3D);
+	CreateTextureImageView(m_textureImageView3D, m_textureImage3D);
+
+	CreateTextureImage("Resources/Textures/Hotbar.png", m_textureImage2D, m_textureImageMemory2D);
+	CreateTextureImageView(m_textureImageView2D, m_textureImage2D);
+
 	CreateTextureSampler();
 
 	CreateDescriptorSetLayout();
@@ -28,11 +32,15 @@ vxl::vxlUBO::vxlUBO(vxlDevice& device) :
 
 vxl::vxlUBO::~vxlUBO()
 {
-	vkDestroySampler(m_device.GetDevice(), m_textureSampler, nullptr);
-	vkDestroyImageView(m_device.GetDevice(), m_textureImageView, nullptr);
 
-	vkDestroyImage(m_device.GetDevice(), m_textureImage, nullptr);
-	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory, nullptr);
+	vkDestroyImageView(m_device.GetDevice(), m_textureImageView2D, nullptr);
+	vkDestroyImage(m_device.GetDevice(), m_textureImage2D, nullptr);
+	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory2D, nullptr);
+
+	vkDestroySampler(m_device.GetDevice(), m_textureSampler, nullptr);
+	vkDestroyImageView(m_device.GetDevice(), m_textureImageView3D, nullptr);
+	vkDestroyImage(m_device.GetDevice(), m_textureImage3D, nullptr);
+	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory3D, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroyBuffer(m_device.GetDevice(), m_uniformBuffers[i], nullptr);
@@ -76,18 +84,25 @@ void vxl::vxlUBO::CreateDescriptorSetLayout()
 	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
 
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	VkDescriptorSetLayoutBinding samplerLayoutBinding3D{};
+	samplerLayoutBinding3D.binding = 1;
+	samplerLayoutBinding3D.descriptorCount = 1;
+	samplerLayoutBinding3D.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding3D.pImmutableSamplers = nullptr;
+	samplerLayoutBinding3D.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+	VkDescriptorSetLayoutBinding samplerLayoutBinding2D{};
+	samplerLayoutBinding2D.binding = 2;
+	samplerLayoutBinding2D.descriptorCount = 1;
+	samplerLayoutBinding2D.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding2D.pImmutableSamplers = nullptr;
+	samplerLayoutBinding2D.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding, samplerLayoutBinding3D, samplerLayoutBinding2D };
 	//Create the descriptor set layout
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());;
+	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 	layoutInfo.pBindings = bindings.data();
 
 	if (vkCreateDescriptorSetLayout(m_device.GetDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
@@ -149,12 +164,17 @@ void vxl::vxlUBO::CreateDescriptorSets()
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 
-		VkDescriptorImageInfo imageInfo{};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = m_textureImageView;
-		imageInfo.sampler = m_textureSampler;
+		VkDescriptorImageInfo imageInfo3D{};
+		imageInfo3D.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo3D.imageView = m_textureImageView3D;
+		imageInfo3D.sampler = m_textureSampler;
 
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+		VkDescriptorImageInfo imageInfo2D{};
+		imageInfo2D.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo2D.imageView = m_textureImageView2D;
+		imageInfo2D.sampler = m_textureSampler;
+
+		std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = m_descriptorSets[i];
@@ -170,16 +190,25 @@ void vxl::vxlUBO::CreateDescriptorSets()
 		descriptorWrites[1].dstArrayElement = 0;
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		descriptorWrites[1].descriptorCount = 1;
-		descriptorWrites[1].pImageInfo = &imageInfo;
+		descriptorWrites[1].pImageInfo = &imageInfo3D;
+
+		descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[2].dstSet = m_descriptorSets[i];
+		descriptorWrites[2].dstBinding = 2;
+		descriptorWrites[2].dstArrayElement = 0;
+		descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[2].descriptorCount = 1;
+		descriptorWrites[2].pImageInfo = &imageInfo2D;
 
 		vkUpdateDescriptorSets(m_device.GetDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 }
 
-void vxl::vxlUBO::CreateTextureImage()
+void vxl::vxlUBO::CreateTextureImage(const std::string& texturePath, VkImage& textureImage, VkDeviceMemory& textureMemory)
 {
 	int texWidth, texHeight, texChannels;
-	stbi_uc* pixels = stbi_load("Resources/Textures/dirt.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load(texturePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	assert(pixels != nullptr && "Cannot load texture! - Check file path?");
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 	if (!pixels) {
@@ -197,10 +226,10 @@ void vxl::vxlUBO::CreateTextureImage()
 
 	stbi_image_free(pixels);
 
-	m_device.CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageMemory);
-	m_device.TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	m_device.CopyBufferToImage(stagingBuffer, m_textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
-	m_device.TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	m_device.CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureMemory);
+	m_device.TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	m_device.CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
+	m_device.TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 
 	vkDestroyBuffer(m_device.GetDevice(), stagingBuffer, nullptr);
@@ -208,27 +237,27 @@ void vxl::vxlUBO::CreateTextureImage()
 
 }
 
-void vxl::vxlUBO::CreateTextureImageView()
+void vxl::vxlUBO::CreateTextureImageView(VkImageView& textureImageView, const VkImage& textureImage )
 {
-	m_textureImageView = m_device.CreateImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+	textureImageView = m_device.CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 void vxl::vxlUBO::CreateTextureSampler()
 {
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.magFilter = VK_FILTER_NEAREST;
+	samplerInfo.minFilter = VK_FILTER_NEAREST;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.anisotropyEnable = VK_TRUE;
 	samplerInfo.maxAnisotropy = m_device.GetPhysicalDeviceProperties().limits.maxSamplerAnisotropy;
 	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	samplerInfo.mipLodBias = 0.0f;
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = 0.0f;

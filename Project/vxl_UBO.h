@@ -38,8 +38,8 @@ namespace vxl
 		void UpdateUBO(uint32_t currentImage, VkExtent2D extent, const vxlCamera& camera);
 
 	private:
-		void CreateTextureImage();
-		void CreateTextureImageView();
+		//void CreateTextureImage();
+		void CreateTextureImageView(VkImageView& textureImageView, const VkImage& textureImage);
 		void CreateTextureSampler();
 
 
@@ -48,11 +48,18 @@ namespace vxl
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
 
+		void CreateTextureImage(const std::string& texturePath, VkImage& textureImage, VkDeviceMemory& textureMemory);
+
 		vxlDevice& m_device;
 
-		VkImage m_textureImage;
-		VkDeviceMemory m_textureImageMemory;
-		VkImageView m_textureImageView;
+		VkImage m_textureImage3D;
+		VkDeviceMemory m_textureImageMemory3D;
+		VkImageView m_textureImageView3D;
+
+		VkImage m_textureImage2D;
+		VkDeviceMemory m_textureImageMemory2D;
+		VkImageView m_textureImageView2D;
+
 		VkSampler m_textureSampler;
 
 		VkDescriptorPool m_descriptorPool;

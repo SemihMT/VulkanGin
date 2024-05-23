@@ -1,13 +1,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include "vxl_app.h"
-
+#include <glm/glm.hpp>
 #include <array>
 #include <chrono>
+#include <iostream>
 #include <stdexcept>
-#include <glm/glm.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
+
+#include "vxl_app.h"
+
+
+
 namespace vxl
 {
 	vxlApp::vxlApp()
@@ -39,9 +41,10 @@ namespace vxl
 			auto currentFrameTime = clock::now();
 			duration<float> deltaTime = duration_cast<duration<float>>(currentFrameTime - lastFrameTime);
 			lastFrameTime = currentFrameTime;
-
+			
 			glfwPollEvents();
 			m_vxlCamera.Update(deltaTime.count());
+			m_vxlWorld->Update(deltaTime.count());
 			DrawFrame();
 		}
 		vkDeviceWaitIdle(m_vxlDevice.GetDevice());
@@ -63,10 +66,10 @@ namespace vxl
 
 		std::vector<vxlModel::Vertex> vertices
 		{
-		{ScreenSpaceToNDC({200,100},WIDTH,HEIGHT), {1.0f, 0.0f, 0.0f} },
-		{ScreenSpaceToNDC({200,0},WIDTH,HEIGHT), {0.0f, 1.0f, 0.0f}},
-		{ScreenSpaceToNDC({600,0},WIDTH,HEIGHT), {0.0f, 0.0f, 1.0f}},
-		{ScreenSpaceToNDC({600,100},WIDTH,HEIGHT), {1.0f, 1.0f, 1.0f}}
+		{ScreenSpaceToNDC({193,45},WIDTH,HEIGHT), {1.0f, 0.0f, 0.0f},{0.0f,1.0f} },
+		{ScreenSpaceToNDC({193,0},WIDTH,HEIGHT), {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+		{ScreenSpaceToNDC({607,0},WIDTH,HEIGHT), {0.0f, 0.0f, 1.0f},{1.0f,0.0f}},
+		{ScreenSpaceToNDC({607,45},WIDTH,HEIGHT), {1.0f, 1.0f, 1.0f},{1.0f,1.0f}}
 		};
 
 		const std::vector<uint32_t> indices =
@@ -76,86 +79,8 @@ namespace vxl
 
 		m_vxlModel = std::make_unique<vxlModel>(m_vxlDevice, vertices, indices);
 
-
-		//std::vector<vxlModel3D::Vertex3D> vertices3D
-		//{
-		//	// left face (white)
-		//	 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-		//	 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-		//	 {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-		//	 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-		//	 {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-		//	 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-
-		//	 // right face (yellow)
-		//	 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-		//	 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-		//	 {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-		//	 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-		//	 {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-		//	 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-
-		//	 // top face (orange, remember y axis points down)
-		//	 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-		//	 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-		//	 {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-		//	 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-		//	 {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-		//	 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-
-		//	 // bottom face (red)
-		//	 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-		//	 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-		//	 {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-		//	 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-		//	 {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-		//	 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-
-		//	 // nose face (blue)
-		//	 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-		//	 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-		//	 {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-		//	 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-		//	 {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-		//	 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-
-		//	 // tail face (green)
-		//	 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-		//	 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-		//	 {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-		//	 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-		//	 {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-		//	 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-		//};
-
-		//const std::vector<unsigned int> indices3D = {
-		//	// Left face (white)
-		//	0, 1, 2,
-		//	3, 4, 5,
-
-		//	// Right face (yellow)
-		//	6, 7, 8,
-		//	9, 10, 11,
-
-		//	// Top face (orange)
-		//	12, 13, 14,
-		//	15, 16, 17,
-
-		//	// Bottom face (red)
-		//	18, 19, 20,
-		//	21, 22, 23,
-
-		//	// Nose face (blue)
-		//	24, 25, 26,
-		//	27, 28, 29,
-
-		//	// Tail face (green)
-		//	30, 31, 32,
-		//	33, 34, 35
-		//};
-
-		//m_vxlModel3D = std::make_unique<vxlModel3D>(m_vxlDevice, vertices3D, indices3D);
-		m_vxlChunk = std::make_unique<vxlChunk>(m_vxlDevice);
+		m_vxlWorld = std::make_unique<vxlWorld>(m_vxlDevice, &m_vxlCamera);
+		
 	}
 	void vxlApp::CreateUBO()
 	{
@@ -164,10 +89,11 @@ namespace vxl
 
 	void vxlApp::CreatePipelineLayout()
 	{
+		const auto descSetLayout = m_vxlUBO->GetDescriptorSetLayout();
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutCreateInfo.setLayoutCount = 0;
-		pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+		pipelineLayoutCreateInfo.setLayoutCount = 1;
+		pipelineLayoutCreateInfo.pSetLayouts = &descSetLayout;
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 		pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
@@ -181,7 +107,6 @@ namespace vxl
 		pipelineLayoutCreateInfo3D.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutCreateInfo3D.setLayoutCount = 1;
 
-		const auto descSetLayout = m_vxlUBO->GetDescriptorSetLayout();
 		pipelineLayoutCreateInfo3D.pSetLayouts = &descSetLayout;
 		pipelineLayoutCreateInfo3D.pushConstantRangeCount = 0;
 		pipelineLayoutCreateInfo3D.pPushConstantRanges = nullptr;
@@ -320,7 +245,7 @@ namespace vxl
 			throw std::runtime_error("failed to begin recording to command buffer!");
 		}
 		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = { {0.1f,0.1f,0.1f,1.0f} };
+		clearValues[0].color = { {0.390625f, 0.58203125f, 0.92578125f, 1.0f} };
 		clearValues[1].depthStencil = { 1.0f,0 };
 
 
@@ -353,9 +278,8 @@ namespace vxl
 		m_vxlGraphicsPipeline3D->Bind(m_commandBuffers[imageIdx]);
 
 		//m_vxlModel3D->Bind(m_commandBuffers[imageIdx]);
-		m_vxlChunk->Bind(m_commandBuffers[imageIdx]);
 		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout3D, static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()));
-		m_vxlChunk->Draw(m_commandBuffers[imageIdx]);
+		m_vxlWorld->Draw(m_commandBuffers[imageIdx]);
 		//m_vxlModel3D->Draw(m_commandBuffers[imageIdx]);
 
 		vkCmdEndRenderPass(m_commandBuffers[imageIdx]);
@@ -381,6 +305,8 @@ namespace vxl
 		m_vxlGraphicsPipeline->Bind(m_commandBuffers[imageIdx]);
 
 		m_vxlModel->Bind(m_commandBuffers[imageIdx]);
+		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout, static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()));
+
 		m_vxlModel->Draw(m_commandBuffers[imageIdx]);
 
 		vkCmdEndRenderPass(m_commandBuffers[imageIdx]);

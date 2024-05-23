@@ -13,6 +13,7 @@
 #include "vxl_GraphicsPipeline3D.h"
 #include "vxl_Model3D.h"
 #include "vxl_UBO.h"
+#include "vxl_World.h"
 
 namespace vxl
 {
@@ -60,7 +61,7 @@ namespace vxl
 		std::vector<VkCommandBuffer> m_commandBuffers;
 		std::unique_ptr<vxlModel> m_vxlModel{ nullptr };
 		std::unique_ptr<vxlModel3D> m_vxlModel3D{ nullptr };
-		std::unique_ptr<vxlChunk> m_vxlChunk{ nullptr };
+		std::unique_ptr<vxlWorld> m_vxlWorld{};
 
 		std::unique_ptr<vxlUBO> m_vxlUBO;
 	};

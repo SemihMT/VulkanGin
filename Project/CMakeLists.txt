@@ -78,7 +78,7 @@ set(SOURCES
     "vxl_SwapChain3D.cpp"
     "vxl_Model3D.h"
     "vxl_Model3D.cpp"
- "vxl_UBO.h" "vxl_UBO.cpp" "vxl_Camera.h" "vxl_Camera.cpp" "vxl_Block.h" "vxl_Block.cpp" "vxl_Chunk.h" "vxl_Chunk.cpp")
+ "vxl_UBO.h" "vxl_UBO.cpp" "vxl_Camera.h" "vxl_Camera.cpp" "vxl_Block.h" "vxl_Block.cpp" "vxl_Chunk.h" "vxl_Chunk.cpp" "vxl_World.h" "vxl_World.cpp")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
