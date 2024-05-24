@@ -4,11 +4,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <glm/gtc/noise.hpp>
 #include <vulkan/vulkan_core.h>
-
-#include "vxl_Block.h"
-#include "vxl_Chunk.h"
-
 namespace vxl
 {
 	class vxlChunk;
@@ -51,14 +48,15 @@ namespace vxl
 		uint32_t subpass = 0;
 	};
 
+	float GenerateLayeredNoise(const glm::vec3& pos, int octaves, float persistence, float lacunarity, float scale);
+
+	float GenerateLayeredNoise(const glm::vec2& pos, int octaves, float persistence, float lacunarity, float scale);
 
 	glm::vec2 NDCToScreenSpace(const glm::vec2& ndc, int width, int height);
 
 	glm::vec2 ScreenSpaceToNDC(const glm::vec2& screen, int width, int height);
 
-	vxlChunk* GetChunk(const glm::vec3& worldPos);
-
-	glm::ivec3 GetChunkCoordinates(const glm::vec3& worldPos, int chunkSize = vxlChunk::ChunkSize);
+	glm::ivec3 GetChunkCoordinates(const glm::vec3& worldPos, int chunkSize = 16);
 
 	glm::ivec3 GetVoxelCoords(const glm::vec3& worldPos, const vxlChunk& chunk);
 

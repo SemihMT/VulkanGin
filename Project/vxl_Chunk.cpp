@@ -1,5 +1,6 @@
 #include "vxl_Chunk.h"
 
+#include <algorithm>
 #include <iostream>
 #include <glm/gtc/noise.hpp>
 
@@ -9,6 +10,7 @@
 #include "GP2Buffer.h"
 #include "GP2Buffer.h"
 #include "GP2Buffer.h"
+#include "vxl_Utils.h"
 
 std::vector<VkVertexInputBindingDescription> vxl::vxlChunk::Vertex3D::GetBindingDescriptions()
 {
@@ -41,7 +43,7 @@ std::vector<VkVertexInputAttributeDescription> vxl::vxlChunk::Vertex3D::GetAttri
 }
 
 vxl::vxlChunk::vxlChunk(vxlDevice& device, const glm::ivec3& position) :
-	m_blocks{ ChunkSize * ChunkSize * ChunkSize, vxlBlock{glm::vec3{0}, glm::vec4{1.0f}, vxlBlock::VoxelType::Solid,20} },
+	m_blocks{ ChunkSize * ChunkSize * ChunkSize, vxlBlock{glm::vec3{0}, vxlBlock::VoxelType::TEST_BLOCK} },
 	m_chunkPosition{ position },
 	m_worldPosition(position* ChunkSize),
 	m_device{ device }
@@ -54,7 +56,7 @@ vxl::vxlChunk::~vxlChunk()
 	//There is an upper limit to the number of allocations that can exist simultaneously!!!
 	//This is only in the 1000s :(
 	//We should eventually use something like the Vulkan Memory Allocator Library to help us allocate memory
-	if(m_vertexBuffer != nullptr)
+	if (m_vertexBuffer != nullptr)
 		Destroy();
 }
 
@@ -92,7 +94,15 @@ void vxl::vxlChunk::Destroy()
 
 void vxl::vxlChunk::GenerateChunk()
 {
-	const float scale = 0.1f;
+	const float surfaceScale = 0.09f;  // Scale for mountainous terrain
+	const float caveScale = 0.1f;      // Scale for cave terrain
+	const int caveThreshold = 40;      // Threshold below which caves start appearing
+	const int maxHeight = 128;
+	const int octaves = 5;             // Number of noise layers
+	const float persistence = 0.5f;    // Controls the amplitude of octaves
+	const float lacunarity = 2.0f;     // Controls the frequency of octaves
+
+	
 
 	for (int x = 0; x < ChunkSize; ++x)
 	{
@@ -101,69 +111,91 @@ void vxl::vxlChunk::GenerateChunk()
 			for (int z = 0; z < ChunkSize; ++z)
 			{
 				glm::vec3 pos = glm::vec3(x + m_worldPosition.x, y + m_worldPosition.y, z + m_worldPosition.z);
-				glm::vec3 scaledPos = pos * scale;
-				float noiseValue = glm::perlin(scaledPos);
 
-				noiseValue = (noiseValue + 1.0f) / 2.0f;
+				// Adjust the surface scale dynamically based on the chunk's vertical position
+				float adjustedSurfaceScale = surfaceScale * (1.0f - (pos.y / (float)maxHeight));
+				float surfaceNoise = GenerateLayeredNoise(pos, octaves, persistence, lacunarity, adjustedSurfaceScale);
 
-				vxlBlock::VoxelType blockType;
-				if (noiseValue > 0.5f)
+				float caveNoise = glm::simplex(pos * caveScale);
+				caveNoise = (caveNoise + 1.0f) / 2.0f;
+
+				vxlBlock::VoxelType blockType = vxlBlock::VoxelType::Air;
+				int height = static_cast<int>(surfaceNoise * ChunkSize); // Convert noise to height
+
+				// Introduce a gradient to reduce block density at higher elevations
+				float gradient = glm::clamp((maxHeight - pos.y) / maxHeight, 0.0f, 1.0f);
+				if (surfaceNoise * gradient > 0.1f) // Adjust this threshold for desired smoothness
 				{
-					// Determine the block type based on the world Y position and Perlin noise
-					if (pos.y < 80)
+					if (pos.y > caveThreshold && pos.y < 102)
 					{
-						blockType = vxlBlock::VoxelType::Stone;
+						// Mountainous terrain
+						blockType = GenerateMountainTerrain(pos, surfaceNoise);
 					}
-					else if (pos.y < 95)
+					else if (pos.y <= caveThreshold)
 					{
-						// Blend between Stone and Dirt using Perlin noise
-						float transition = (pos.y - 80) / 15.0f;
-						transition = noiseValue * transition;
-						blockType = transition > 0.5f ? vxlBlock::VoxelType::Dirt : vxlBlock::VoxelType::Stone;
+						// Cave-like terrain
+						blockType = GenerateCaveTerrain(pos, caveNoise, surfaceNoise, caveThreshold);
 					}
-					else
+					else if (pos.y > caveThreshold && pos.y < maxHeight && y <= height)
 					{
-						// Blend between Dirt and Grass using Perlin noise
-						float transition = (pos.y - 95) / 5.0f;
-						transition = noiseValue * transition;
-						blockType = transition > 0.5f ? vxlBlock::VoxelType::Grass : vxlBlock::VoxelType::Dirt;
+						blockType = vxlBlock::VoxelType::GrassSide;
 					}
-
-					switch (blockType)
-					{
-					case vxlBlock::VoxelType::Air:
-						break;
-					case vxlBlock::VoxelType::Solid:
-						break;
-					case vxlBlock::VoxelType::Stone:
-						m_blocks[GetIndex(x, y, z)].SetID({ 26, 6 });
-						break;
-					case vxlBlock::VoxelType::Dirt:
-						m_blocks[GetIndex(x, y, z)].SetID({ 13, 21 });
-						break;
-					case vxlBlock::VoxelType::Grass:
-						m_blocks[GetIndex(x, y, z)].SetID({ 8, 25 });
-						break;
-					case vxlBlock::VoxelType::Sand:
-						m_blocks[GetIndex(x, y, z)].SetID({ 23, 16 });
-						break;
-					}
-
-					m_blocks[GetIndex(x, y, z)].SetType(blockType);
-					m_blocks[GetIndex(x, y, z)].SetPosition(pos);
 				}
-				else
-				{
-					m_blocks[GetIndex(x, y, z)].SetType(vxlBlock::VoxelType::Air);
-					m_blocks[GetIndex(x, y, z)].SetPosition(pos);
-				}
+
+				m_blocks[GetIndex(x, y, z)].SetType(blockType);
+				m_blocks[GetIndex(x, y, z)].SetPosition(pos);
 			}
 		}
 	}
-	GenerateMesh();
+	//Generate a mesh only if the chunks has blocks in it
+	if(!std::ranges::all_of(m_blocks, [&](const vxlBlock& block) { return block.GetType() == vxlBlock::VoxelType::Air; }))
+	{
+		GenerateMesh();
+	}
 
 }
 
+vxl::vxlBlock::VoxelType vxl::vxlChunk::GenerateMountainTerrain(const glm::vec3& pos, float surfaceNoise)
+{
+
+	if (surfaceNoise > 0.5f)
+	{
+		if (pos.y < 80)
+		{
+			return vxlBlock::VoxelType::Stone;
+		}
+		else if (pos.y < 95)
+		{
+			float transition = (pos.y - 80) / 15.0f;
+			transition = surfaceNoise * transition;
+			return transition > 0.5f ? vxlBlock::VoxelType::Dirt : vxlBlock::VoxelType::Stone;
+		}
+		else if (pos.y < 102)
+		{
+			float transition = (pos.y - 95) / 5.0f;
+			transition = surfaceNoise * transition;
+			return transition > 0.5f ? vxlBlock::VoxelType::GrassSide: vxlBlock::VoxelType::Dirt;
+		}
+	}
+
+	return vxlBlock::VoxelType::Air;
+}
+
+vxl::vxlBlock::VoxelType vxl::vxlChunk::GenerateCaveTerrain(const glm::vec3& pos, float caveNoise, float surfaceNoise, int caveThreshold)
+{
+	// Blend between cave and surface noise based on height
+	float blendFactor = static_cast<float>(caveThreshold - pos.y) / caveThreshold;
+	float noiseValue = glm::mix(caveNoise, surfaceNoise, blendFactor);
+
+	if (noiseValue > 0.5f)
+	{
+		return vxlBlock::VoxelType::Air;
+	}
+	else
+	{
+		return vxlBlock::VoxelType::Stone;
+	}
+}
 
 void vxl::vxlChunk::GenerateMesh()
 {
@@ -181,22 +213,22 @@ void vxl::vxlChunk::GenerateMesh()
 				{
 					// Add faces only if adjacent voxel is AIR
 					if (x == 0 || GetBlock(x - 1, y, z).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(-1, 0, 0), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(-1, 0, 0), voxel.GetType());
 					}
 					if (x == ChunkSize - 1 || GetBlock(x + 1, y, z).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(1, 0, 0), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(1, 0, 0), voxel.GetType());
 					}
 					if (y == 0 || GetBlock(x, y - 1, z).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(0, -1, 0), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(0, -1, 0), voxel.GetType());
 					}
 					if (y == ChunkSize - 1 || GetBlock(x, y + 1, z).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(0, 1, 0), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(0, 1, 0), voxel.GetType());
 					}
 					if (z == 0 || GetBlock(x, y, z - 1).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(0, 0, -1), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(0, 0, -1), voxel.GetType());
 					}
 					if (z == ChunkSize - 1 || GetBlock(x, y, z + 1).GetType() == vxlBlock::VoxelType::Air) {
-						AddFace(voxel.GetPosition(), voxel.GetColor(), glm::vec3(0, 0, 1), voxel.GetID());
+						AddFace(voxel.GetPosition(), glm::vec3(0, 0, 1), voxel.GetType());
 					}
 				}
 			}
@@ -237,10 +269,10 @@ std::array<glm::vec2, 4> vxl::vxlChunk::GetTextureCoordinates(uint32_t textureIn
 	};
 }
 
-void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec4& color, const glm::vec3& normal, uint32_t index)
+void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, vxlBlock::VoxelType type)
 {
 
-	glm::vec3 faceVertices[4];
+	glm::vec3 faceVertices[4]{};
 	std::array<glm::vec2, 4> texCoords;
 
 	// Define the vertices of the face and corresponding texture coordinates based on the normal direction
@@ -249,51 +281,58 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec4& color, c
 		faceVertices[1] = position + glm::vec3(0, 1, 1);
 		faceVertices[2] = position + glm::vec3(0, 0, 1);
 		faceVertices[3] = position + glm::vec3(0, 0, 0);
-		texCoords = GetTextureCoordinates(index, 32);
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 	else if (normal == glm::vec3(1, 0, 0)) { // +X face
-		faceVertices[2] = position + glm::vec3(1, 0, 0);
-		faceVertices[3] = position + glm::vec3(1, 0, 1);
 		faceVertices[0] = position + glm::vec3(1, 1, 1);
 		faceVertices[1] = position + glm::vec3(1, 1, 0);
-		texCoords = GetTextureCoordinates(index, 32);
+		faceVertices[2] = position + glm::vec3(1, 0, 0);
+		faceVertices[3] = position + glm::vec3(1, 0, 1);
+
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 	else if (normal == glm::vec3(0, -1, 0)) { // -Y face
+		faceVertices[0] = position + glm::vec3(1, 0, 0);
 		faceVertices[1] = position + glm::vec3(0, 0, 0);
 		faceVertices[2] = position + glm::vec3(0, 0, 1);
 		faceVertices[3] = position + glm::vec3(1, 0, 1);
-		faceVertices[0] = position + glm::vec3(1, 0, 0);
-		texCoords = GetTextureCoordinates(index, 32);
+
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 	else if (normal == glm::vec3(0, 1, 0)) { // +Y face
 		faceVertices[0] = position + glm::vec3(0, 1, 0);
 		faceVertices[1] = position + glm::vec3(1, 1, 0);
 		faceVertices[2] = position + glm::vec3(1, 1, 1);
 		faceVertices[3] = position + glm::vec3(0, 1, 1);
-		texCoords = GetTextureCoordinates(index, 32);
+		if(type == vxlBlock::VoxelType::GrassSide)
+		{
+			type = vxlBlock::VoxelType::GrassTop;
+		}
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 	else if (normal == glm::vec3(0, 0, -1)) { // -Z face
-		faceVertices[2] = position + glm::vec3(0, 0, 0);
-		faceVertices[3] = position + glm::vec3(1, 0, 0);
 		faceVertices[0] = position + glm::vec3(1, 1, 0);
 		faceVertices[1] = position + glm::vec3(0, 1, 0);
-		texCoords = GetTextureCoordinates(index, 32);
+		faceVertices[2] = position + glm::vec3(0, 0, 0);
+		faceVertices[3] = position + glm::vec3(1, 0, 0);
+
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 	else if (normal == glm::vec3(0, 0, 1)) { // +Z face
-		faceVertices[3] = position + glm::vec3(0, 0, 1);
 		faceVertices[0] = position + glm::vec3(0, 1, 1);
 		faceVertices[1] = position + glm::vec3(1, 1, 1);
 		faceVertices[2] = position + glm::vec3(1, 0, 1);
-		texCoords = GetTextureCoordinates(index, 32);
+		faceVertices[3] = position + glm::vec3(0, 0, 1);
+		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
 	}
 
 
 	// Add vertices with texture coordinates and color
 	for (int i = 0; i < 4; ++i) {
-		m_vertices.push_back({ faceVertices[i], color, texCoords[i] });
+		m_vertices.push_back({ faceVertices[i], {}, texCoords[i] });
 	}
 
-	uint32_t idx = m_vertices.size();
+	uint32_t idx = static_cast<uint32_t>(m_vertices.size());
 	m_indices.push_back(idx - 4);
 	m_indices.push_back(idx - 3);
 	m_indices.push_back(idx - 2);

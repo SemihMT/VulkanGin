@@ -38,8 +38,11 @@ namespace vxl
 		std::array < glm::vec2,4 > GetTextureCoordinates(uint32_t textureIndex, int atlasSize = 32, int textureSize = 16, float offset = 1.25f);
 
 		void GenerateChunk();
+		vxlBlock::VoxelType GenerateMountainTerrain(const glm::vec3& pos, float surfaceNoise);
+		vxlBlock::VoxelType GenerateCaveTerrain(const glm::vec3& pos, float caveNoise, float surfaceNoise, int caveThreshold);
+
 		void GenerateMesh();
-		void AddFace(const glm::vec3& position, const glm::vec4& color, const glm::vec3& normal, uint32_t index);
+		void AddFace(const glm::vec3& position, const glm::vec3& normal, vxlBlock::VoxelType type);
 
 		int GetIndex(int x, int y, int z) const;
 

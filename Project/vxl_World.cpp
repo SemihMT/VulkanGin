@@ -37,28 +37,52 @@ vxl::vxlChunk* vxl::vxlWorld::GetChunkByChunkPos(const glm::ivec3& chunkPosition
 
 void vxl::vxlWorld::Draw(VkCommandBuffer commandBuffer)
 {
+	int viewDistance = 4;
 	for (const auto& chunk : m_loadedChunks)
 	{
-		chunk->Bind(commandBuffer);
-		chunk->Draw(commandBuffer);
+		glm::vec3 cameraPos{ m_camera->GetPosition() };
+		glm::ivec3 currentChunkPos{ GetChunkCoordinates(cameraPos) };
+		glm::ivec3 chunkPos = chunk->GetChunkPos();
+		const int squaredDistance =
+			(chunkPos.x - currentChunkPos.x) * (chunkPos.x - currentChunkPos.x) +
+			(chunkPos.y - currentChunkPos.y) * (chunkPos.y - currentChunkPos.y) +
+			(chunkPos.z - currentChunkPos.z) * (chunkPos.z - currentChunkPos.z);
+
+		if (squaredDistance <= viewDistance * viewDistance)
+		{
+
+			chunk->Bind(commandBuffer);
+			chunk->Draw(commandBuffer);
+
+		}
 	}
 }
-
 void vxl::vxlWorld::Update(float deltaTime)
 {
-	glm::vec3 cameraPos{ m_camera->GetPosition() };
-	glm::ivec3 currentChunkPos{ GetChunkCoordinates(cameraPos) };
+	// Get camera position
+	glm::vec3 cameraPos = m_camera->GetPosition();
 
-	int radius = 3; // This will create a 3x3 area of chunks
+	// Define chunk radii
+	constexpr int loadRadius = 3; // Load chunks within a 3x3x3 cube
+	constexpr int deleteRadiusSquared = 5 * 5; // Squared delete radius
 
-	for (int x = currentChunkPos.x - radius; x <= currentChunkPos.x + radius; ++x)
+	// Calculate current chunk position
+	glm::ivec3 currentChunkPos = GetChunkCoordinates(cameraPos);
+
+	// Load new chunks within load radius
+	for (int x = currentChunkPos.x - loadRadius; x <= currentChunkPos.x + loadRadius; ++x)
 	{
-		for (int y = currentChunkPos.y - radius; y <= currentChunkPos.y + radius; ++y)
+		for (int y = currentChunkPos.y - loadRadius; y <= currentChunkPos.y + loadRadius; ++y)
 		{
-			for (int z = currentChunkPos.z - radius; z <= currentChunkPos.z + radius; ++z)
+			for (int z = currentChunkPos.z - loadRadius; z <= currentChunkPos.z + loadRadius; ++z)
 			{
 				glm::ivec3 chunkPos{ x, y, z };
-				if (GetChunkByChunkPos(chunkPos) == nullptr && chunkPos.y < Max_Chunks_Y)
+				int dx = chunkPos.x - currentChunkPos.x;
+				int dy = chunkPos.y - currentChunkPos.y;
+				int dz = chunkPos.z - currentChunkPos.z;
+				int distanceSquared = dx * dx + dy * dy + dz * dz;
+
+				if (GetChunkByChunkPos(chunkPos) == nullptr && distanceSquared <= loadRadius * loadRadius)
 				{
 					GenerateChunk(chunkPos);
 				}
@@ -66,38 +90,45 @@ void vxl::vxlWorld::Update(float deltaTime)
 		}
 	}
 
-	std::vector<std::unique_ptr<vxlChunk>> chunksToRemove;
-	for (auto it = m_loadedChunks.begin(); it != m_loadedChunks.end();) {
+	// Remove chunks beyond delete radius
+	auto it = m_loadedChunks.begin();
+	while (it != m_loadedChunks.end())
+	{
 		glm::ivec3 chunkPos = (*it)->GetChunkPos();
-		int distanceX = abs(chunkPos.x - currentChunkPos.x);
-		int distanceY = abs(chunkPos.y - currentChunkPos.y);
-		int distanceZ = abs(chunkPos.z - currentChunkPos.z);
+		int dx = chunkPos.x - currentChunkPos.x;
+		int dy = chunkPos.y - currentChunkPos.y;
+		int dz = chunkPos.z - currentChunkPos.z;
+		int distanceSquared = dx * dx + dy * dy + dz * dz;
 
-		if (distanceX > radius || distanceY > radius || distanceZ > radius) {
-			chunksToRemove.push_back(std::move(*it));
+		if (distanceSquared > deleteRadiusSquared)
+		{
 			it = m_loadedChunks.erase(it);
 		}
-		else {
+		else
+		{
 			++it;
 		}
 	}
-	// Ensure the GPU has finished all work before destroying the buffers
+
+	// Ensure GPU has finished work
 	vkQueueWaitIdle(m_device.GetGraphicsQueue());
-
-
-	chunksToRemove.clear();
 }
 
 void vxl::vxlWorld::Init()
 {
-	glm::vec3 cameraPos{ m_camera->GetPosition() };
-	glm::ivec3 currentChunkPos{ GetChunkCoordinates(cameraPos) };
+	// Get camera position
+	glm::vec3 cameraPos = m_camera->GetPosition();
 
-	int radius = 5;
+	// Calculate current chunk position
+	glm::ivec3 currentChunkPos = GetChunkCoordinates(cameraPos);
 
+	// Define chunk radii
+	constexpr int radius = 4;
+
+	// Iterate over chunks within the specified radius
 	for (int x = currentChunkPos.x - radius; x <= currentChunkPos.x + radius; ++x)
 	{
-		for (int y = currentChunkPos.y - radius; y <= currentChunkPos.y; ++y)
+		for (int y = currentChunkPos.y - radius; y <= currentChunkPos.y + radius; ++y)
 		{
 			for (int z = currentChunkPos.z - radius; z <= currentChunkPos.z + radius; ++z)
 			{

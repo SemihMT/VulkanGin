@@ -2,23 +2,27 @@
 #include <glm/glm.hpp>
 namespace vxl
 {
-
+	constexpr uint32_t RowColToIdx(const glm::vec<2, uint32_t>& rowCol, int gridsize = 32)
+	{
+		return rowCol.x * gridsize + rowCol.y;
+	}
 	class vxlBlock
 	{
 	public:
-		enum class VoxelType
+		enum class VoxelType : uint32_t
 		{
-			Air,
-			Solid,
-			Stone,
-			Dirt,
-			Grass,
-			Sand,
+			Air = 0,
+			Stone = RowColToIdx({26,6}),
+			Dirt = RowColToIdx({13,21}),
+			GrassSide = RowColToIdx({8,25}),
+			GrassTop = RowColToIdx({10,26}),
+			Sand = RowColToIdx({23,16}),
+			TEST_BLOCK = RowColToIdx({0,20})
+
 
 		};
 	public:
-		vxlBlock(const glm::vec3& worldPosition, glm::vec4 color, VoxelType type, uint32_t id);
-		vxlBlock(const glm::vec3& worldPosition, glm::vec4 color, VoxelType type, const glm::vec<2, uint32_t>& rowCol);
+		vxlBlock(const glm::vec3& worldPosition, VoxelType type);
 		~vxlBlock() = default;
 
 		/*vxlBlock(const vxlBlock& other) = delete;
@@ -27,19 +31,17 @@ namespace vxl
 		//vxlBlock& operator=(vxlBlock&& other) = delete;
 
 		void SetType(VoxelType type) { m_type = type; }
-		void SetID(uint32_t id) { m_id = id; }
-		void SetID(const glm::vec<2, uint32_t>& rowCol) { m_id = rowCol.x * 32 + rowCol.y; }
 		void SetPosition(const glm::vec3& pos) { m_position = pos; }
 
 
 		VoxelType GetType() const { return m_type; }
 		glm::vec3  GetPosition() const { return m_position; }
-		glm::vec4 GetColor() const { return m_color; }
-		uint32_t GetID() const { return m_id; }
+		
 	private:
-		uint32_t m_id{ 0 };
+		uint32_t Vec2ToId(const glm::ivec2& rowCol) const;
+
+		const int AtlasSize{ 32 };
 		glm::vec3 m_position; // World coordinates
-		glm::vec4 m_color;    // RGBA color
 		VoxelType m_type;     // Type of voxel
 	};
 }
