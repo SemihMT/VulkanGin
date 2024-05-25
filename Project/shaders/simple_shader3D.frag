@@ -10,9 +10,10 @@ layout (location = 0) out vec4 outColor;
 layout(binding = 1) uniform sampler2D texSampler;
 void main()
 {
-	outColor = texture(texSampler, fragTexCoord);
-	if (outColor.w < 0.8) {
-        discard;
-    }
-	//outColor = vec4(fragTexCoord,0.0,1.0);
+	vec4 texColor = texture(texSampler, fragTexCoord);
+    vec3 shadowColor = max(fragColor, vec3(0.33));
+    texColor.rgb *= shadowColor;
+
+    
+    outColor = texColor;
 }

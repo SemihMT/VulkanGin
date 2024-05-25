@@ -14,7 +14,6 @@ namespace vxl
 {
 	vxlApp::vxlApp()
 	{
-
 		CreateUBO();
 		CreatePipelineLayout();
 		RecreateSwapChain();

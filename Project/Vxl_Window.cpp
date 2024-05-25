@@ -51,6 +51,7 @@ namespace vxl {
 		glfwSetCursorPosCallback(m_window, MouseMovementCallback);
 		glfwSetKeyCallback(m_window, KeyCallback);
 		glfwSetScrollCallback(m_window, ScrollCallback);
+		glfwSetMouseButtonCallback(m_window, MouseButtonCallback);
 
 		// tell GLFW to capture our mouse
 		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -67,6 +68,11 @@ namespace vxl {
 	void vxlWindow::setKeyCallback(std::function<void(GLFWwindow*, int, int, int, int)> callback)
 	{
 		m_callbacks.keyCallback = callback;
+	}
+
+	void vxlWindow::SetMouseButtonCallback(std::function<void(GLFWwindow*, int, int, int)> callback)
+	{
+		m_callbacks.mouseButtonCallback = callback;
 	}
 
 	void vxlWindow::setScrollCallback(std::function<void(GLFWwindow*, double, double)> callback)
@@ -103,6 +109,14 @@ namespace vxl {
 		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
 		if (callbacks && callbacks->keyCallback) {
 			callbacks->keyCallback(window, key, scancode, action, mods);
+		}
+	}
+
+	void vxlWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
+		if (callbacks && callbacks->mouseButtonCallback) {
+			callbacks->mouseButtonCallback(window, button, action, mods);
 		}
 	}
 }

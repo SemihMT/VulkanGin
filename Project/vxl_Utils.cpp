@@ -93,14 +93,14 @@ glm::vec2 vxl::NDCToScreenSpace(const glm::vec2& ndc, int width, int height)
 {
 	float xScreen = (ndc.x + 1.0f) * 0.5f * width;
 	float yScreen = (1.0f - (ndc.y + 1.0f) * 0.5f) * height;
-	return {xScreen, yScreen};
+	return { xScreen, yScreen };
 }
 
 glm::vec2 vxl::ScreenSpaceToNDC(const glm::vec2& screen, int width, int height)
 {
 	float xNdc = (2.0f * screen.x) / width - 1.0f;
 	float yNdc = 1.0f - (2.0f * screen.y) / height;
-	return {xNdc, yNdc};
+	return { xNdc, yNdc };
 }
 
 glm::ivec3 vxl::GetChunkCoordinates(const glm::vec3& worldPos, int chunkSize)
@@ -122,44 +122,4 @@ glm::ivec3 vxl::GetVoxelCoords(const glm::vec3& worldPos, const vxlChunk& chunk)
 		static_cast<int>(floor(relativePos.z))
 	);*/
 	return {};
-}
-
-vxl::RaycastHit vxl::PerformRaycast(const Ray& ray, float maxDistance)
-{
-	RaycastHit hit{};
-	for (float t = 0.0f; t < maxDistance; t += RaycastStepSize)
-	{
-		const glm::vec3 currentRayPos = ray.origin + ray.direction * t;
-
-		// Calculate the chunk coordinates from the ray position
-		const int chunkX = static_cast<int>(std::floor(currentRayPos.x / 16.0f));
-		const int chunkY = static_cast<int>(std::floor(currentRayPos.y / 16.0f));
-		const int chunkZ = static_cast<int>(std::floor(currentRayPos.z / 16.0f));
-
-		// Calculate the local voxel coordinates within the chunk
-		int voxelX = static_cast<int>(std::floor(currentRayPos.x - chunkX * 16.0f));
-		int voxelY = static_cast<int>(std::floor(currentRayPos.y - chunkY * 16.0f));
-		int voxelZ = static_cast<int>(std::floor(currentRayPos.z - chunkZ * 16.0f));
-
-		// Check if the ray intersects with a voxel in the chunk
-		if (voxelX >= 0 && voxelX < 16 && voxelY >= 0 && voxelY < 16 && voxelZ >= 0 && voxelZ < 16) {
-			// Get the chunk and voxel data
-			/*vxlChunk* chunk = GetChunk(chunkX, chunkY, chunkZ);
-			vxlBlock* voxel = chunk->GetBlock(voxelX, voxelY, voxelZ);*/
-
-			//// If the voxel is solid, calculate the hit information and exit
-			//if (voxel->GetType() == vxlBlock::VoxelType::Solid) {
-			//	hit.hit = true;
-			//	hit.hitPosition = glm::vec3(chunkX * 16 + voxelX, chunkY * 16 + voxelY, chunkZ * 16 + voxelZ);
-			//	hit.distance = t;
-			//	//hit.hitNormal = CalculateFaceNormal(ray.direction, voxelX, voxelY, voxelZ);
-			//	hit.voxelId = voxel->GetID();
-			//	hit.voxelCoords = glm::ivec3{ voxelX,voxelY,voxelZ };
-			//	return hit;
-			//}
-		}
-
-	}
-	// If no intersection was found, return an invalid hit
-	return hit;
 }

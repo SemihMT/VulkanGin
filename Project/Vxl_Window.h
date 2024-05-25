@@ -15,6 +15,7 @@ namespace vxl
 			std::function<void(GLFWwindow*, double, double)> mouseMoveCallback;
 			std::function<void(GLFWwindow*, int, int, int, int)> keyCallback;
 			std::function<void(GLFWwindow*, double, double)> scrollCallback;
+			std::function<void(GLFWwindow*, int, int, int)> mouseButtonCallback;
 			
 		};
 	public:
@@ -37,12 +38,13 @@ namespace vxl
 		void SetMouseMovementCallback(std::function<void(GLFWwindow*, double, double)> callback);
 		void setScrollCallback(std::function<void(GLFWwindow*, double, double)> callback);
 		void setKeyCallback(std::function<void(GLFWwindow*, int, int, int, int)> callback);
-
+		void SetMouseButtonCallback(std::function<void(GLFWwindow*, int, int, int)>);
 	private:
 		static void FrameBufferResizeCallback(GLFWwindow* window, int width, int height);
 		static void MouseMovementCallback(GLFWwindow* window, double xpos, double ypos);
 		static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 		static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+		static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 		void InitWindow();
 		int m_width{};

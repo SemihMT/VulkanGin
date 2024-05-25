@@ -1,6 +1,7 @@
 #include "vxl_Chunk.h"
 
 #include <algorithm>
+#include <execution>
 #include <iostream>
 #include <glm/gtc/noise.hpp>
 
@@ -81,6 +82,25 @@ void vxl::vxlChunk::Draw(VkCommandBuffer commandBuffer)
 	}
 }
 
+void vxl::vxlChunk::RemoveBlock(const glm::ivec3& blockPos)
+{
+	m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
+	m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+	auto index = GetIndex(blockPos.x, blockPos.y, blockPos.z);
+	m_blocks[index].SetType(vxlBlock::VoxelType::Air);
+
+	
+	GenerateMesh();
+}
+void vxl::vxlChunk::PlaceBlock(const glm::ivec3& blockPos, vxlBlock::VoxelType type)
+{
+	m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
+	m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+	m_blocks[GetIndex(blockPos.x, blockPos.y, blockPos.z)].SetType(type);
+	
+	GenerateMesh();
+}
+
 void vxl::vxlChunk::Destroy()
 {
 	if (!m_vertices.empty())
@@ -92,67 +112,79 @@ void vxl::vxlChunk::Destroy()
 }
 
 
+
 void vxl::vxlChunk::GenerateChunk()
 {
-	const float surfaceScale = 0.09f;  // Scale for mountainous terrain
-	const float caveScale = 0.1f;      // Scale for cave terrain
-	const int caveThreshold = 40;      // Threshold below which caves start appearing
-	const int maxHeight = 128;
-	const int octaves = 5;             // Number of noise layers
-	const float persistence = 0.5f;    // Controls the amplitude of octaves
-	const float lacunarity = 2.0f;     // Controls the frequency of octaves
+	// Constants
+	constexpr float surfaceScale = 0.09f;
+	constexpr float caveScale = 0.1f;
+	constexpr int caveThreshold = 40;
+	constexpr int maxHeight = 128;
+	constexpr int octaves = 5;
+	constexpr float persistence = 0.5f;
+	constexpr float lacunarity = 2.0f;
 
-	
+	// Precompute the world position offset
+	const glm::vec3 worldOffset(m_worldPosition.x, m_worldPosition.y, m_worldPosition.z);
 
-	for (int x = 0; x < ChunkSize; ++x)
-	{
-		for (int y = 0; y < ChunkSize; ++y)
-		{
-			for (int z = 0; z < ChunkSize; ++z)
-			{
-				glm::vec3 pos = glm::vec3(x + m_worldPosition.x, y + m_worldPosition.y, z + m_worldPosition.z);
+	// Prepare a vector to hold block positions and types
+	struct BlockInfo {
+		glm::ivec3 position;
+		vxlBlock::VoxelType type;
+	};
+	std::vector<BlockInfo> blocks(ChunkSize * ChunkSize * ChunkSize);
 
-				// Adjust the surface scale dynamically based on the chunk's vertical position
-				float adjustedSurfaceScale = surfaceScale * (1.0f - (pos.y / (float)maxHeight));
-				float surfaceNoise = GenerateLayeredNoise(pos, octaves, persistence, lacunarity, adjustedSurfaceScale);
+	// Fill the block positions and types
+	std::for_each(std::execution::par_unseq, blocks.begin(), blocks.end(), [&](BlockInfo& block) {
+		// Compute block coordinates
+		const int index = &block - blocks.data();
+		const int x = index / (ChunkSize * ChunkSize);
+		const int y = (index / ChunkSize) % ChunkSize;
+		const int z = index % ChunkSize;
 
-				float caveNoise = glm::simplex(pos * caveScale);
-				caveNoise = (caveNoise + 1.0f) / 2.0f;
+		const glm::vec3 pos = glm::vec3(x, y, z) + worldOffset;
 
-				vxlBlock::VoxelType blockType = vxlBlock::VoxelType::Air;
-				int height = static_cast<int>(surfaceNoise * ChunkSize); // Convert noise to height
+		// Adjust the surface scale dynamically based on the chunk's vertical position
+		const float adjustedSurfaceScale = surfaceScale * (1.0f - (pos.y / static_cast<float>(maxHeight)));
+		const float surfaceNoise = GenerateLayeredNoise(pos, octaves, persistence, lacunarity, adjustedSurfaceScale);
 
-				// Introduce a gradient to reduce block density at higher elevations
-				float gradient = glm::clamp((maxHeight - pos.y) / maxHeight, 0.0f, 1.0f);
-				if (surfaceNoise * gradient > 0.1f) // Adjust this threshold for desired smoothness
-				{
-					if (pos.y > caveThreshold && pos.y < 102)
-					{
-						// Mountainous terrain
-						blockType = GenerateMountainTerrain(pos, surfaceNoise);
-					}
-					else if (pos.y <= caveThreshold)
-					{
-						// Cave-like terrain
-						blockType = GenerateCaveTerrain(pos, caveNoise, surfaceNoise, caveThreshold);
-					}
-					else if (pos.y > caveThreshold && pos.y < maxHeight && y <= height)
-					{
-						blockType = vxlBlock::VoxelType::GrassSide;
-					}
-				}
+		float caveNoise = glm::simplex(pos * caveScale);
+		caveNoise = (caveNoise + 1.0f) / 2.0f;
 
-				m_blocks[GetIndex(x, y, z)].SetType(blockType);
-				m_blocks[GetIndex(x, y, z)].SetPosition(pos);
+		vxlBlock::VoxelType blockType = vxlBlock::VoxelType::Air;
+		const int height = static_cast<int>(surfaceNoise * ChunkSize); // Convert noise to height
+
+		// Introduce a gradient to reduce block density at higher elevations
+		const float gradient = glm::clamp((maxHeight - pos.y) / static_cast<float>(maxHeight), 0.0f, 1.0f);
+		if (surfaceNoise * gradient > 0.1f) { // Adjust this threshold for desired smoothness
+			if (pos.y > caveThreshold && pos.y < 102) {
+				// Mountainous terrain
+				blockType = GenerateMountainTerrain(pos, surfaceNoise);
+			}
+			else if (pos.y <= caveThreshold) {
+				// Cave-like terrain
+				blockType = GenerateCaveTerrain(pos, caveNoise, surfaceNoise, caveThreshold);
+			}
+			else if (pos.y > caveThreshold && pos.y < maxHeight && y <= height) {
+				blockType = vxlBlock::VoxelType::GrassSide;
 			}
 		}
-	}
-	//Generate a mesh only if the chunks has blocks in it
-	if(!std::ranges::all_of(m_blocks, [&](const vxlBlock& block) { return block.GetType() == vxlBlock::VoxelType::Air; }))
-	{
+
+		block.position = glm::ivec3(x, y, z);
+		block.type = blockType;
+		});
+
+	// Update blocks in the world
+	std::for_each(std::execution::par_unseq, blocks.begin(), blocks.end(), [&](const BlockInfo& block) {
+		const int index = GetIndex(block.position.x, block.position.y, block.position.z);
+		m_blocks[index].SetType(block.type);
+		m_blocks[index].SetPosition(glm::vec3(block.position) + worldOffset);
+		});
+
+	// Generate a mesh only if the chunk has blocks in it
+	if (!std::ranges::all_of(m_blocks, [&](const vxlBlock& block) { return block.GetType() == vxlBlock::VoxelType::Air; })) {
 		GenerateMesh();
 	}
-
 }
 
 vxl::vxlBlock::VoxelType vxl::vxlChunk::GenerateMountainTerrain(const glm::vec3& pos, float surfaceNoise)
@@ -274,6 +306,7 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 
 	glm::vec3 faceVertices[4]{};
 	std::array<glm::vec2, 4> texCoords;
+	glm::vec3 shadowMultiplier{};
 
 	// Define the vertices of the face and corresponding texture coordinates based on the normal direction
 	if (normal == glm::vec3(-1, 0, 0)) { // -X face
@@ -282,6 +315,7 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 		faceVertices[2] = position + glm::vec3(0, 0, 1);
 		faceVertices[3] = position + glm::vec3(0, 0, 0);
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
 	}
 	else if (normal == glm::vec3(1, 0, 0)) { // +X face
 		faceVertices[0] = position + glm::vec3(1, 1, 1);
@@ -290,14 +324,21 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 		faceVertices[3] = position + glm::vec3(1, 0, 1);
 
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
+
 	}
 	else if (normal == glm::vec3(0, -1, 0)) { // -Y face
 		faceVertices[0] = position + glm::vec3(1, 0, 0);
 		faceVertices[1] = position + glm::vec3(0, 0, 0);
 		faceVertices[2] = position + glm::vec3(0, 0, 1);
 		faceVertices[3] = position + glm::vec3(1, 0, 1);
-
+		if (type == vxlBlock::VoxelType::GrassSide)
+		{
+			type = vxlBlock::VoxelType::Dirt;
+		}
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
+
 	}
 	else if (normal == glm::vec3(0, 1, 0)) { // +Y face
 		faceVertices[0] = position + glm::vec3(0, 1, 0);
@@ -309,6 +350,8 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 			type = vxlBlock::VoxelType::GrassTop;
 		}
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
+
 	}
 	else if (normal == glm::vec3(0, 0, -1)) { // -Z face
 		faceVertices[0] = position + glm::vec3(1, 1, 0);
@@ -317,6 +360,8 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 		faceVertices[3] = position + glm::vec3(1, 0, 0);
 
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
+
 	}
 	else if (normal == glm::vec3(0, 0, 1)) { // +Z face
 		faceVertices[0] = position + glm::vec3(0, 1, 1);
@@ -324,12 +369,14 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 		faceVertices[2] = position + glm::vec3(1, 0, 1);
 		faceVertices[3] = position + glm::vec3(0, 0, 1);
 		texCoords = GetTextureCoordinates(static_cast<uint32_t>(type), 32);
+		shadowMultiplier = CalculateShadowMultiplier(position, normal);
+
 	}
 
 
 	// Add vertices with texture coordinates and color
 	for (int i = 0; i < 4; ++i) {
-		m_vertices.push_back({ faceVertices[i], {}, texCoords[i] });
+		m_vertices.push_back({ faceVertices[i], shadowMultiplier, texCoords[i] });
 	}
 
 	uint32_t idx = static_cast<uint32_t>(m_vertices.size());
@@ -339,6 +386,22 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 	m_indices.push_back(idx - 2);
 	m_indices.push_back(idx - 1);
 	m_indices.push_back(idx - 4);
+}
+
+glm::vec3 vxl::vxlChunk::CalculateShadowMultiplier(const glm::vec3& pos, const glm::vec3& normal,
+	const glm::vec3& lightPos)
+{
+	// Calculate direction from the face to the light source
+	glm::vec3 lightDirection = glm::normalize(lightPos - pos);
+
+	// Calculate the dot product of face normal and light direction
+	float dotProduct = glm::dot(normal, lightDirection);
+
+	// Clamp dot product to [0, 1] range to avoid negative shadow values
+	dotProduct = glm::clamp(dotProduct, 0.0f, 1.0f);
+
+	// Use the dot product as the shadow multiplier
+	return glm::vec3(dotProduct);
 }
 
 void vxl::vxlChunk::CreateVertexBuffers(const std::vector<Vertex3D>& vertices)

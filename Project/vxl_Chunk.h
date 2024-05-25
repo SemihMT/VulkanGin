@@ -29,6 +29,8 @@ namespace vxl
 
 		void Bind(VkCommandBuffer commandBuffer);
 		void Draw(VkCommandBuffer commandBuffer);
+		void RemoveBlock(const glm::ivec3& blockPos);
+		void PlaceBlock(const glm::ivec3& blockPos, vxlBlock::VoxelType type);
 		void Destroy();
 
 		glm::ivec3 GetChunkPos() const { return m_chunkPosition; }	// returns the position of the chunk based coordinate system. Each chunk is one element of the grid
@@ -43,7 +45,7 @@ namespace vxl
 
 		void GenerateMesh();
 		void AddFace(const glm::vec3& position, const glm::vec3& normal, vxlBlock::VoxelType type);
-
+		glm::vec3 CalculateShadowMultiplier(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& lightPos = { 50,200,0 });
 		int GetIndex(int x, int y, int z) const;
 
 		std::vector<vxlBlock> m_blocks;

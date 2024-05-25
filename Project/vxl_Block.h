@@ -17,7 +17,8 @@ namespace vxl
 			GrassSide = RowColToIdx({8,25}),
 			GrassTop = RowColToIdx({10,26}),
 			Sand = RowColToIdx({23,16}),
-			TEST_BLOCK = RowColToIdx({0,20})
+			TEST_BLOCK = RowColToIdx({0,20}),
+			OakPlanks = RowColToIdx({ 18,7 }),
 
 
 		};
