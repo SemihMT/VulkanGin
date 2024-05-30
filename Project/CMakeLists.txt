@@ -23,7 +23,6 @@ add_custom_target(
     DEPENDS ${SPIRV_BINARY_FILES}
 )
 
- 
 
 set(SOURCES
     "main.cpp"
@@ -91,6 +90,7 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/Resources
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
 )
+
 
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

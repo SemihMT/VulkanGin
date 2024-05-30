@@ -19,12 +19,17 @@ namespace vxl
 			Sand = RowColToIdx({23,16}),
 			TEST_BLOCK = RowColToIdx({0,20}),
 			OakPlanks = RowColToIdx({ 18,7 }),
+			OakLog = RowColToIdx({18,5}),
+			OakLeaves = RowColToIdx({18,4}),
+			CobbleStone = RowColToIdx({14,13}),
+			Bricks = RowColToIdx({9,9}),
+			Glass = RowColToIdx({15,24}),
 
 
 		};
 	public:
 		vxlBlock(const glm::vec3& worldPosition, VoxelType type);
-		~vxlBlock() = default;
+		~vxlBlock() = default; 
 
 		/*vxlBlock(const vxlBlock& other) = delete;
 		vxlBlock(vxlBlock&& other) = delete;*/

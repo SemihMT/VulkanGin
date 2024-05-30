@@ -469,7 +469,7 @@ namespace vxl
 	void vxlDevice::CleanupBuffer(VkBuffer buffer, VkDeviceMemory bufferMemory)
 	{
 		vkDestroyBuffer(m_device, buffer, nullptr);
-		vkFreeMemory(m_device, bufferMemory, nullptr);
+ 		vkFreeMemory(m_device, bufferMemory, nullptr);
 	}
 
 	void vxlDevice::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,

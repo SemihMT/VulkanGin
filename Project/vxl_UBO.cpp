@@ -9,8 +9,7 @@
 #include "stb_image.h"
 #include "vxl_Camera.h"
 #include "vxl_Utils.h"
-
-
+#include "vulkanbase/VulkanUtil.h"
 
 
 vxl::vxlUBO::vxlUBO(vxlDevice& device) :
@@ -21,6 +20,9 @@ vxl::vxlUBO::vxlUBO(vxlDevice& device) :
 
 	CreateTextureImage("Resources/Textures/Hotbar.png", m_textureImage2D, m_textureImageMemory2D);
 	CreateTextureImageView(m_textureImageView2D, m_textureImage2D);
+
+	CreateTextureImage("Resources/Textures/crosshair.png", m_crosshairTextureImage, m_crosshairTextureImageMemory);
+	CreateTextureImageView(m_crosshairTextureImageView, m_crosshairTextureImage);
 
 	CreateTextureSampler();
 
@@ -36,6 +38,10 @@ vxl::vxlUBO::~vxlUBO()
 	vkDestroyImageView(m_device.GetDevice(), m_textureImageView2D, nullptr);
 	vkDestroyImage(m_device.GetDevice(), m_textureImage2D, nullptr);
 	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory2D, nullptr);
+
+	vkDestroyImageView(m_device.GetDevice(), m_crosshairTextureImageView, nullptr);
+	vkDestroyImage(m_device.GetDevice(), m_crosshairTextureImage, nullptr);
+	vkFreeMemory(m_device.GetDevice(), m_crosshairTextureImageMemory, nullptr);
 
 	vkDestroySampler(m_device.GetDevice(), m_textureSampler, nullptr);
 	vkDestroyImageView(m_device.GetDevice(), m_textureImageView3D, nullptr);
@@ -71,6 +77,7 @@ void vxl::vxlUBO::UpdateUBO(uint32_t currentImage, VkExtent2D extent, const vxlC
 	ubo.view = camera.GetViewMatrix();
 	ubo.proj = glm::perspective(glm::radians(camera.GetFOV()), extent.width / (float)extent.height, 0.1f, 1000.0f);
 	ubo.proj[1][1] *= -1;
+	ubo.screen = {WIDTH,HEIGHT};
 	memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
@@ -98,7 +105,14 @@ void vxl::vxlUBO::CreateDescriptorSetLayout()
 	samplerLayoutBinding2D.pImmutableSamplers = nullptr;
 	samplerLayoutBinding2D.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-	std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding, samplerLayoutBinding3D, samplerLayoutBinding2D };
+	VkDescriptorSetLayoutBinding samplerLayoutBindingCrosshair{};
+	samplerLayoutBindingCrosshair.binding = 3;
+	samplerLayoutBindingCrosshair.descriptorCount = 1;
+	samplerLayoutBindingCrosshair.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBindingCrosshair.pImmutableSamplers = nullptr;
+	samplerLayoutBindingCrosshair.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	std::array<VkDescriptorSetLayoutBinding, 4> bindings = { uboLayoutBinding, samplerLayoutBinding3D, samplerLayoutBinding2D, samplerLayoutBindingCrosshair };
 	//Create the descriptor set layout
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -174,7 +188,12 @@ void vxl::vxlUBO::CreateDescriptorSets()
 		imageInfo2D.imageView = m_textureImageView2D;
 		imageInfo2D.sampler = m_textureSampler;
 
-		std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+		VkDescriptorImageInfo imageInfoCrosshair{};
+		imageInfoCrosshair.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfoCrosshair.imageView = m_crosshairTextureImageView;
+		imageInfoCrosshair.sampler = m_textureSampler;
+
+		std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = m_descriptorSets[i];
@@ -199,6 +218,14 @@ void vxl::vxlUBO::CreateDescriptorSets()
 		descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		descriptorWrites[2].descriptorCount = 1;
 		descriptorWrites[2].pImageInfo = &imageInfo2D;
+
+		descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[3].dstSet = m_descriptorSets[i];
+		descriptorWrites[3].dstBinding = 3;
+		descriptorWrites[3].dstArrayElement = 0;
+		descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[3].descriptorCount = 1;
+		descriptorWrites[3].pImageInfo = &imageInfoCrosshair;
 
 		vkUpdateDescriptorSets(m_device.GetDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}

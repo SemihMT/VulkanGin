@@ -14,6 +14,8 @@ void main()
     vec3 shadowColor = max(fragColor, vec3(0.33));
     texColor.rgb *= shadowColor;
 
-    
+    //naive way of handling transparancy
+    if(texColor.a < 1.0)
+        discard;
     outColor = texColor;
 }

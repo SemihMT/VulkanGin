@@ -16,9 +16,10 @@ namespace vxl
 			static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 		};
+
 	public:
 		static constexpr int ChunkSize = 16;
-		vxlChunk(vxlDevice& device, const glm::ivec3& position);
+		vxlChunk(vxlDevice& device, const glm::ivec3& position, int seed);
 		~vxlChunk();
 
 		vxlChunk(const vxlChunk& other) = delete;
@@ -39,7 +40,7 @@ namespace vxl
 	private:
 		std::array < glm::vec2,4 > GetTextureCoordinates(uint32_t textureIndex, int atlasSize = 32, int textureSize = 16, float offset = 1.25f);
 
-		void GenerateChunk();
+		void GenerateChunk(int seed);
 		vxlBlock::VoxelType GenerateMountainTerrain(const glm::vec3& pos, float surfaceNoise);
 		vxlBlock::VoxelType GenerateCaveTerrain(const glm::vec3& pos, float caveNoise, float surfaceNoise, int caveThreshold);
 
@@ -47,6 +48,8 @@ namespace vxl
 		void AddFace(const glm::vec3& position, const glm::vec3& normal, vxlBlock::VoxelType type);
 		glm::vec3 CalculateShadowMultiplier(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& lightPos = { 50,200,0 });
 		int GetIndex(int x, int y, int z) const;
+
+		bool ChunkIsEmpty();
 
 		std::vector<vxlBlock> m_blocks;
 		std::vector<Vertex3D> m_vertices;

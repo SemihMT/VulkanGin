@@ -43,13 +43,13 @@ std::vector<VkVertexInputAttributeDescription> vxl::vxlChunk::Vertex3D::GetAttri
 	return attributeDescriptions;
 }
 
-vxl::vxlChunk::vxlChunk(vxlDevice& device, const glm::ivec3& position) :
+vxl::vxlChunk::vxlChunk(vxlDevice& device, const glm::ivec3& position, int seed) :
 	m_blocks{ ChunkSize * ChunkSize * ChunkSize, vxlBlock{glm::vec3{0}, vxlBlock::VoxelType::TEST_BLOCK} },
 	m_chunkPosition{ position },
 	m_worldPosition(position* ChunkSize),
 	m_device{ device }
 {
-	GenerateChunk();
+	GenerateChunk(seed);
 }
 
 vxl::vxlChunk::~vxlChunk()
@@ -63,7 +63,7 @@ vxl::vxlChunk::~vxlChunk()
 
 void vxl::vxlChunk::Bind(VkCommandBuffer commandBuffer)
 {
-	if (!m_vertices.empty())
+	if (!ChunkIsEmpty())
 	{
 		VkBuffer buffers[] = { m_vertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
@@ -75,29 +75,35 @@ void vxl::vxlChunk::Bind(VkCommandBuffer commandBuffer)
 
 void vxl::vxlChunk::Draw(VkCommandBuffer commandBuffer)
 {
-	if (!m_vertices.empty())
+	if (!ChunkIsEmpty())
 	{
 		vkCmdDrawIndexed(commandBuffer, m_indexCount, 1, 0, 0, 0);
-
 	}
 }
 
 void vxl::vxlChunk::RemoveBlock(const glm::ivec3& blockPos)
 {
-	m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
-	m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+	
 	auto index = GetIndex(blockPos.x, blockPos.y, blockPos.z);
 	m_blocks[index].SetType(vxlBlock::VoxelType::Air);
 
-	
-	GenerateMesh();
+
+	if (!ChunkIsEmpty())
+	{
+		m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
+		m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+		GenerateMesh();
+	}
 }
 void vxl::vxlChunk::PlaceBlock(const glm::ivec3& blockPos, vxlBlock::VoxelType type)
 {
-	m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
-	m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+
+	if (!ChunkIsEmpty())
+	{
+		m_device.CleanupBuffer(m_vertexBuffer, m_vertexBufferMemory);
+		m_device.CleanupBuffer(m_indexBuffer, m_indexBufferMemory);
+	}
 	m_blocks[GetIndex(blockPos.x, blockPos.y, blockPos.z)].SetType(type);
-	
 	GenerateMesh();
 }
 
@@ -113,7 +119,7 @@ void vxl::vxlChunk::Destroy()
 
 
 
-void vxl::vxlChunk::GenerateChunk()
+void vxl::vxlChunk::GenerateChunk(int seed)
 {
 	// Constants
 	constexpr float surfaceScale = 0.09f;
@@ -143,12 +149,13 @@ void vxl::vxlChunk::GenerateChunk()
 		const int z = index % ChunkSize;
 
 		const glm::vec3 pos = glm::vec3(x, y, z) + worldOffset;
+		const glm::vec3 seededPos = glm::vec3(x + seed, y + seed, z + seed) + worldOffset;
 
 		// Adjust the surface scale dynamically based on the chunk's vertical position
 		const float adjustedSurfaceScale = surfaceScale * (1.0f - (pos.y / static_cast<float>(maxHeight)));
-		const float surfaceNoise = GenerateLayeredNoise(pos, octaves, persistence, lacunarity, adjustedSurfaceScale);
+		const float surfaceNoise = GenerateLayeredNoise(seededPos, octaves, persistence, lacunarity, adjustedSurfaceScale);
 
-		float caveNoise = glm::simplex(pos * caveScale);
+		float caveNoise = glm::simplex(seededPos * caveScale);
 		caveNoise = (caveNoise + 1.0f) / 2.0f;
 
 		vxlBlock::VoxelType blockType = vxlBlock::VoxelType::Air;
@@ -168,6 +175,8 @@ void vxl::vxlChunk::GenerateChunk()
 			else if (pos.y > caveThreshold && pos.y < maxHeight && y <= height) {
 				blockType = vxlBlock::VoxelType::GrassSide;
 			}
+			else if (pos.y >= maxHeight)
+				blockType = vxlBlock::VoxelType::Air;
 		}
 
 		block.position = glm::ivec3(x, y, z);
@@ -206,7 +215,7 @@ vxl::vxlBlock::VoxelType vxl::vxlChunk::GenerateMountainTerrain(const glm::vec3&
 		{
 			float transition = (pos.y - 95) / 5.0f;
 			transition = surfaceNoise * transition;
-			return transition > 0.5f ? vxlBlock::VoxelType::GrassSide: vxlBlock::VoxelType::Dirt;
+			return transition > 0.5f ? vxlBlock::VoxelType::GrassSide : vxlBlock::VoxelType::Dirt;
 		}
 	}
 
@@ -345,7 +354,7 @@ void vxl::vxlChunk::AddFace(const glm::vec3& position, const glm::vec3& normal, 
 		faceVertices[1] = position + glm::vec3(1, 1, 0);
 		faceVertices[2] = position + glm::vec3(1, 1, 1);
 		faceVertices[3] = position + glm::vec3(0, 1, 1);
-		if(type == vxlBlock::VoxelType::GrassSide)
+		if (type == vxlBlock::VoxelType::GrassSide)
 		{
 			type = vxlBlock::VoxelType::GrassTop;
 		}
@@ -488,4 +497,10 @@ vxl::vxlBlock& vxl::vxlChunk::GetBlock(int x, int y, int z)
 int vxl::vxlChunk::GetIndex(int x, int y, int z) const
 {
 	return x + ChunkSize * (y + ChunkSize * z);
+}
+
+bool vxl::vxlChunk::ChunkIsEmpty()
+{
+	//Returns true if all blocks in a chunk are air
+	return std::ranges::all_of(m_blocks, [&](const vxlBlock& block) { return block.GetType() == vxlBlock::VoxelType::Air; });
 }

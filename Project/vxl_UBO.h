@@ -22,6 +22,7 @@ namespace vxl
 			glm::mat4 model;
 			glm::mat4 view;
 			glm::mat4 proj;
+			glm::vec2 screen;
 		};
 	public:
 		vxlUBO(vxlDevice& device);
@@ -59,6 +60,11 @@ namespace vxl
 		VkImage m_textureImage2D;
 		VkDeviceMemory m_textureImageMemory2D;
 		VkImageView m_textureImageView2D;
+
+		
+		VkImage m_crosshairTextureImage;
+		VkDeviceMemory m_crosshairTextureImageMemory;
+		VkImageView m_crosshairTextureImageView;
 
 		VkSampler m_textureSampler;
 

@@ -26,7 +26,7 @@ namespace vxl
 		vkDestroyPipelineLayout(m_vxlDevice.GetDevice(), m_pipelineLayout, nullptr);
 		vkDestroyPipelineLayout(m_vxlDevice.GetDevice(), m_pipelineLayout3D, nullptr);
 
-		
+
 	}
 
 	void vxlApp::Run()
@@ -40,7 +40,7 @@ namespace vxl
 			auto currentFrameTime = clock::now();
 			duration<float> deltaTime = duration_cast<duration<float>>(currentFrameTime - lastFrameTime);
 			lastFrameTime = currentFrameTime;
-			
+
 			glfwPollEvents();
 			m_vxlCamera.Update(deltaTime.count());
 			m_vxlWorld->Update(deltaTime.count());
@@ -49,9 +49,9 @@ namespace vxl
 		vkDeviceWaitIdle(m_vxlDevice.GetDevice());
 	}
 
-	
 
-	
+
+
 
 	void vxlApp::LoadModels()
 	{
@@ -63,23 +63,48 @@ namespace vxl
 			{{-0.5f, 1.f}, {1.0f, 1.0f, 1.0f}}
 			};*/
 
+
+		glm::vec2 hotbarTextureSize{ 414,45 };
+		glm::vec2 meshTopLeft{ (WIDTH - hotbarTextureSize.x) / 2,hotbarTextureSize.y };
+		glm::vec2 meshBottomLeft{ (WIDTH - hotbarTextureSize.x) / 2,0 };
+		glm::vec2 meshTopRight{ WIDTH - (WIDTH - hotbarTextureSize.x) / 2,hotbarTextureSize.y };
+		glm::vec2 meshBottomRight{ WIDTH - (WIDTH - hotbarTextureSize.x) / 2,0 };
 		std::vector<vxlModel::Vertex> vertices
 		{
-		{ScreenSpaceToNDC({193,45},WIDTH,HEIGHT), {1.0f, 0.0f, 0.0f},{0.0f,1.0f} },
-		{ScreenSpaceToNDC({193,0},WIDTH,HEIGHT), {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
-		{ScreenSpaceToNDC({607,0},WIDTH,HEIGHT), {0.0f, 0.0f, 1.0f},{1.0f,0.0f}},
-		{ScreenSpaceToNDC({607,45},WIDTH,HEIGHT), {1.0f, 1.0f, 1.0f},{1.0f,1.0f}}
+			{ScreenSpaceToNDC(meshTopLeft, WIDTH, HEIGHT), {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+			{ScreenSpaceToNDC(meshBottomLeft, WIDTH, HEIGHT), {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
+			{ScreenSpaceToNDC(meshBottomRight, WIDTH, HEIGHT), {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
+			{ScreenSpaceToNDC(meshTopRight, WIDTH, HEIGHT), {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
 		};
 
 		const std::vector<uint32_t> indices =
 		{
-			0, 1, 2, 2, 3, 0
+			 0, 1, 2, 2, 3, 0
+		};
+		m_vxlHotbarModel = std::make_unique<vxlModel>(m_vxlDevice, vertices, indices);
+
+		glm::vec2 crosshairSize{ 32 };
+		glm::vec2 screenCenter{ WIDTH / 2, HEIGHT / 2 };
+
+		meshTopLeft = { screenCenter.x - crosshairSize.x / 2, screenCenter.y + crosshairSize.y / 2 };
+		meshBottomLeft = { screenCenter.x - crosshairSize.x / 2, screenCenter.y - crosshairSize.y / 2 };
+		meshTopRight = { screenCenter.x + crosshairSize.x / 2, screenCenter.y + crosshairSize.y / 2 };
+		meshBottomRight = { screenCenter.x + crosshairSize.x / 2, screenCenter.y - crosshairSize.y / 2 };
+		std::vector<vxlModel::Vertex> crosshairVertices
+		{
+		{ScreenSpaceToNDC(meshTopLeft,WIDTH,HEIGHT), {1.0f, 0.0f, 0.0f},{0.0f,1.0f} },
+		{ScreenSpaceToNDC(meshBottomLeft,WIDTH,HEIGHT), {0.0f, 1.0f, 0.0f},{0.0f,0.0f}},
+		{ScreenSpaceToNDC(meshBottomRight,WIDTH,HEIGHT), {0.0f, 0.0f, 1.0f},{1.0f,0.0f}},
+		{ScreenSpaceToNDC(meshTopRight,WIDTH,HEIGHT), {1.0f, 1.0f, 1.0f},{1.0f,1.0f}}
 		};
 
-		m_vxlModel = std::make_unique<vxlModel>(m_vxlDevice, vertices, indices);
-
+		const std::vector<uint32_t> crosshairIndices =
+		{
+			0, 1, 2, 2, 3, 0
+		};
+		m_vxlCrosshairModel = std::make_unique<vxlModel>(m_vxlDevice, crosshairVertices, crosshairIndices);
 		m_vxlWorld = std::make_unique<vxlWorld>(m_vxlDevice, &m_vxlCamera);
-		
+
 	}
 	void vxlApp::CreateUBO()
 	{
@@ -303,10 +328,13 @@ namespace vxl
 
 		m_vxlGraphicsPipeline->Bind(m_commandBuffers[imageIdx]);
 
-		m_vxlModel->Bind(m_commandBuffers[imageIdx]);
-		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout, static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()));
 
-		m_vxlModel->Draw(m_commandBuffers[imageIdx]);
+		m_vxlUBO->Bind(m_commandBuffers[imageIdx], m_pipelineLayout, static_cast<uint32_t>(m_vxlSwapChain->GetCurrentFrame()));
+		m_vxlHotbarModel->Bind(m_commandBuffers[imageIdx]);
+		m_vxlHotbarModel->Draw(m_commandBuffers[imageIdx]);
+
+		m_vxlCrosshairModel->Bind(m_commandBuffers[imageIdx]);
+		m_vxlCrosshairModel->Draw(m_commandBuffers[imageIdx]);
 
 		vkCmdEndRenderPass(m_commandBuffers[imageIdx]);
 

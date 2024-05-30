@@ -96,10 +96,10 @@ void vxl::vxlCamera::OnKeyPress(int key, int scancode, int action, int mods)
 	}
 	else if (action == GLFW_RELEASE) {
 		keyState[key] = false;
+		m_worldObserver->OnKeyPress(key,scancode,action,mods);
 	}
+	
 }
-
-std::unordered_map<int, bool> mouseButtonState;
 
 void vxl::vxlCamera::OnMouseButton(int key, int action, int mods)
 {
@@ -144,6 +144,4 @@ void vxl::vxlCamera::ProcessInput(float deltaTime)
 	{
 		m_speed = 10.0f;
 	}
-
-	
 }

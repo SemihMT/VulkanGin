@@ -20,8 +20,8 @@ namespace vxl
 	class vxlApp
 	{
 	public:
-		static constexpr int WIDTH = 800;
-		static constexpr int HEIGHT = 600;
+		static constexpr int WIDTH = 1920;
+		static constexpr int HEIGHT = 1080;
 	public:
 		vxlApp();
 		~vxlApp();
@@ -59,7 +59,8 @@ namespace vxl
 		VkPipelineLayout m_pipelineLayout;
 		VkPipelineLayout m_pipelineLayout3D;
 		std::vector<VkCommandBuffer> m_commandBuffers;
-		std::unique_ptr<vxlModel> m_vxlModel{ nullptr };
+		std::unique_ptr<vxlModel> m_vxlHotbarModel{ nullptr };
+		std::unique_ptr<vxlModel> m_vxlCrosshairModel{ nullptr };
 		std::unique_ptr<vxlModel3D> m_vxlModel3D{ nullptr };
 		std::unique_ptr<vxlWorld> m_vxlWorld{};
 

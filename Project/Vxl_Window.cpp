@@ -43,6 +43,7 @@ namespace vxl {
 
 
 		m_window = glfwCreateWindow(m_width, m_height, m_windowName.c_str(), nullptr, nullptr);
+
 		//Pair the glfw window object with this window class (just stores a ptr with the window)
 		glfwSetWindowUserPointer(m_window, &m_callbacks);
 		//Set the function that glfw should call when it realizes m_window has been resized
