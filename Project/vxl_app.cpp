@@ -12,6 +12,26 @@
 
 namespace vxl
 {
+	void vxlApp::PrintControls()
+	{
+		std::cout << "\033[1;36m--- Controls ---\033[0m\n";
+		std::cout << "\033[1;36mWASD\033[0m: Movement\n";
+		std::cout << "\033[1;36m1-9\033[0m: Select blocks in order:\n";
+		std::cout << "  \033[1;34m1\033[0m: Stone\n";
+		std::cout << "  \033[1;34m2\033[0m: Cobblestone\n";
+		std::cout << "  \033[1;34m3\033[0m: Bricks\n";
+		std::cout << "  \033[1;34m4\033[0m: Dirt\n";
+		std::cout << "  \033[1;34m5\033[0m: Oak Planks\n";
+		std::cout << "  \033[1;34m6\033[0m: Oak Log\n";
+		std::cout << "  \033[1;34m7\033[0m: Leaves\n";
+		std::cout << "  \033[1;34m8\033[0m: Glass\n";
+		std::cout << "  \033[1;34m9\033[0m: Sand\n";
+		std::cout << "\033[1;36mScroll Wheel\033[0m: Increase/Decrease FOV\n";
+		std::cout << "\033[1;36mSpacebar\033[0m: Move Up\n";
+		std::cout << "\033[1;36mLeft Shift\033[0m: Move Down\n";
+		std::cout << "\033[1;36mLeft Control\033[0m: Increase Speed\n";
+	}
+
 	vxlApp::vxlApp()
 	{
 		CreateUBO();
@@ -19,6 +39,7 @@ namespace vxl
 		RecreateSwapChain();
 		CreateCommandBuffers();
 		LoadModels();
+		PrintControls();
 	}
 
 	vxlApp::~vxlApp()
