@@ -1,6 +1,6 @@
-# VulcanGin
+# VulkanGin
 
-Welcome to the **VulcanGin** repository! VulcanGin is a first-person voxel world editor inspired by Minecraft. It allows users to place and break blocks, and fly around an infinitely generated world. The project is developed using C++ and Vulkan, providing a robust and efficient framework for rendering and interacting with vast voxel landscapes.
+Welcome to the **VulkanGin** repository! VulkanGin is a first-person voxel world editor inspired by Minecraft. It allows users to place and break blocks, and fly around an infinitely generated world. The project is developed using C++ and Vulkan, providing a robust and efficient framework for rendering and interacting with vast voxel landscapes.
 
 ## Table of Contents
 
@@ -10,7 +10,10 @@ Welcome to the **VulcanGin** repository! VulcanGin is a first-person voxel world
 - [Usage](#usage)
 ## Overview
 
-VulcanGin is a powerful voxel world editor that offers an immersive first-person experience. The world is procedurally generated using simplex noise and is divided into chunks of 16x16x16 blocks. As you navigate the world, chunks are dynamically loaded and unloaded to ensure seamless exploration.
+VulkanGin is a voxel world editor that offers an immersive first-person experience. The world is procedurally generated using simplex noise and is divided into chunks of 16x16x16 blocks. As you navigate the world, chunks are dynamically loaded and unloaded to ensure seamless exploration.
+
+https://github.com/user-attachments/assets/08a172bf-f377-4436-ba01-1247d96e0eb7
+
 
 ## Features
 
@@ -25,16 +28,15 @@ VulcanGin is a powerful voxel world editor that offers an immersive first-person
 
 ### Prerequisites
 
-- C++17 compatible compiler
+- C++20 compatible compiler
 - CMake
 - Vulkan SDK
-- Simplex noise library (optional, if not included in the repo)
 
-### Building VulcanGin
+### Building VulkanGin
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/VulcanGin.git
-cd VulcanGin
+git clone https://github.com/SemihMT/VulkanGin.git
+cd VulkanGin
 ```
 
 If Visual Studio 2022 or later is installed, I'd recommend opening the cloned repo using VS and building from there.
@@ -42,19 +44,12 @@ If not, plain CMake should do the trick.
 
 ## Usage
 
-### Running VulcanGin
-
-Once built, you can run VulcanGin with the following command:
-
-```bash
-./VulcanGin
-```
-
 ### Controls
 
 - **W/A/S/D**: Move forward/left/backward/right
 - **Space**: Fly up
 - **Shift**: Fly down
+- **L-Ctrl**: Speed up
 - **Mouse**: Look around
 - **Left Click**: Break block
 - **Right Click**: Place block
