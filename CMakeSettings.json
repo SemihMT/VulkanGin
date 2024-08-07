@@ -15,6 +15,11 @@
           "name": "GLFW_BUILD_TESTS",
           "value": "False",
           "type": "BOOL"
+        },
+        {
+          "name": "GLFW_BUILD_DOCS",
+          "value": "False",
+          "type": "BOOL"
         }
       ]
     },
