@@ -9,17 +9,15 @@
 #include "stb_image.h"
 #include "vxl_Camera.h"
 #include "vxl_Utils.h"
-#include "vulkanbase/VulkanUtil.h"
-
-
+#include <vxl_app.h>
 vxl::vxlUBO::vxlUBO(vxlDevice& device) :
 	m_device(device)
 {
-	CreateTextureImage("Resources/Textures/TextureAtlas-BlocksOnly.png", m_textureImage3D,m_textureImageMemory3D);
-	CreateTextureImageView(m_textureImageView3D, m_textureImage3D);
+	CreateTextureImage("Resources/Textures/TextureAtlas-BlocksOnly.png", m_textureAtlasImage,m_textureAtlasImageMemory);
+	CreateTextureImageView(m_textureAtlasImageView, m_textureAtlasImage);
 
-	CreateTextureImage("Resources/Textures/Hotbar.png", m_textureImage2D, m_textureImageMemory2D);
-	CreateTextureImageView(m_textureImageView2D, m_textureImage2D);
+	CreateTextureImage("Resources/Textures/Hotbar.png", m_hotbarTextureImage, m_hotbarTextureImageMemory);
+	CreateTextureImageView(m_hotbarTextureImageView, m_hotbarTextureImage);
 
 	CreateTextureImage("Resources/Textures/crosshair.png", m_crosshairTextureImage, m_crosshairTextureImageMemory);
 	CreateTextureImageView(m_crosshairTextureImageView, m_crosshairTextureImage);
@@ -35,18 +33,18 @@ vxl::vxlUBO::vxlUBO(vxlDevice& device) :
 vxl::vxlUBO::~vxlUBO()
 {
 
-	vkDestroyImageView(m_device.GetDevice(), m_textureImageView2D, nullptr);
-	vkDestroyImage(m_device.GetDevice(), m_textureImage2D, nullptr);
-	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory2D, nullptr);
+	vkDestroyImageView(m_device.GetDevice(), m_hotbarTextureImageView, nullptr);
+	vkDestroyImage(m_device.GetDevice(), m_hotbarTextureImage, nullptr);
+	vkFreeMemory(m_device.GetDevice(), m_hotbarTextureImageMemory, nullptr);
 
 	vkDestroyImageView(m_device.GetDevice(), m_crosshairTextureImageView, nullptr);
 	vkDestroyImage(m_device.GetDevice(), m_crosshairTextureImage, nullptr);
 	vkFreeMemory(m_device.GetDevice(), m_crosshairTextureImageMemory, nullptr);
 
 	vkDestroySampler(m_device.GetDevice(), m_textureSampler, nullptr);
-	vkDestroyImageView(m_device.GetDevice(), m_textureImageView3D, nullptr);
-	vkDestroyImage(m_device.GetDevice(), m_textureImage3D, nullptr);
-	vkFreeMemory(m_device.GetDevice(), m_textureImageMemory3D, nullptr);
+	vkDestroyImageView(m_device.GetDevice(), m_textureAtlasImageView, nullptr);
+	vkDestroyImage(m_device.GetDevice(), m_textureAtlasImage, nullptr);
+	vkFreeMemory(m_device.GetDevice(), m_textureAtlasImageMemory, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroyBuffer(m_device.GetDevice(), m_uniformBuffers[i], nullptr);
@@ -77,7 +75,7 @@ void vxl::vxlUBO::UpdateUBO(uint32_t currentImage, VkExtent2D extent, const vxlC
 	ubo.view = camera.GetViewMatrix();
 	ubo.proj = glm::perspective(glm::radians(camera.GetFOV()), extent.width / (float)extent.height, 0.1f, 1000.0f);
 	ubo.proj[1][1] *= -1;
-	ubo.screen = {WIDTH,HEIGHT};
+	ubo.screen = {vxlApp::WIDTH, vxlApp::HEIGHT};
 	memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
@@ -180,12 +178,12 @@ void vxl::vxlUBO::CreateDescriptorSets()
 
 		VkDescriptorImageInfo imageInfo3D{};
 		imageInfo3D.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo3D.imageView = m_textureImageView3D;
+		imageInfo3D.imageView = m_textureAtlasImageView;
 		imageInfo3D.sampler = m_textureSampler;
 
 		VkDescriptorImageInfo imageInfo2D{};
 		imageInfo2D.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo2D.imageView = m_textureImageView2D;
+		imageInfo2D.imageView = m_hotbarTextureImageView;
 		imageInfo2D.sampler = m_textureSampler;
 
 		VkDescriptorImageInfo imageInfoCrosshair{};

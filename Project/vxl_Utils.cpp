@@ -52,6 +52,14 @@ bool vxl::parseOBJ(const std::string& filename, std::vector<uint32_t>& indices, 
 }
 
 
+int vxl::GetSquaredDistance(const glm::ivec3& pos1, const glm::ivec3& pos2)
+{
+	const int dx = pos1.x - pos2.x;
+	const int dy = pos1.y - pos2.y;
+	const int dz = pos1.z - pos2.z;
+	return dx * dx + dy * dy + dz * dz;
+}
+
 float vxl::GenerateLayeredNoise(const glm::vec3& pos, int octaves, float persistence, float lacunarity, float scale)
 {
 	float noiseValue = 0.0f;
@@ -59,7 +67,8 @@ float vxl::GenerateLayeredNoise(const glm::vec3& pos, int octaves, float persist
 	float frequency = 1.0f;
 	float maxValue = 0.0f;
 
-	for (int i = 0; i < octaves; ++i) {
+	for (int i = 0; i < octaves; ++i)
+	{
 		noiseValue += glm::simplex(pos * frequency * scale) * amplitude;
 		maxValue += amplitude;
 		amplitude *= persistence;
@@ -77,7 +86,8 @@ float vxl::GenerateLayeredNoise(const glm::vec2& pos, int octaves, float persist
 	float frequency = 1.0f;
 	float maxValue = 0.0f;
 
-	for (int i = 0; i < octaves; ++i) {
+	for (int i = 0; i < octaves; ++i)
+	{
 		noiseValue += glm::simplex(pos * frequency * scale) * amplitude;
 		maxValue += amplitude;
 		amplitude *= persistence;

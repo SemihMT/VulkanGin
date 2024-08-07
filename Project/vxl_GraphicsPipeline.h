@@ -21,6 +21,8 @@ namespace vxl
 		vxlGraphicsPipeline& operator=(vxlGraphicsPipeline&& other) = delete;
 
 		void Bind(VkCommandBuffer commandBuffer);
+		// This function fills in a struct that contains most of the pipeline information we need to get set up for 2D rendering
+		// The user should change whatever settings they see fit to make the pipeline work in the way they want
 		static void CreateDefaultPipelineConfiguration(PipelineConfiguration& config);
 
 	private:

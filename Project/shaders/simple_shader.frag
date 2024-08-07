@@ -13,7 +13,7 @@ layout(binding = 3) uniform sampler2D crosshairSampler;
 void main()
 {
     // Define a threshold for the Y position
-    float centerThreshold = screen.y; // Adjust as needed
+    float centerThreshold = screen.y * 0.9; // Adjust as needed
 
     vec4 color;
     if(gl_FragCoord.y <= centerThreshold) {

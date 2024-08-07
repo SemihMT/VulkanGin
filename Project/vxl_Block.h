@@ -2,6 +2,9 @@
 #include <glm/glm.hpp>
 namespace vxl
 {
+	// Function to automatically calculate an index into the texture atlas from rows & colums
+	// This way I can use the enum type as both the texture information and the type information :D
+	// See 'GetTextureCoordinates' in vxlChunk 
 	constexpr uint32_t RowColToIdx(const glm::vec<2, uint32_t>& rowCol, int gridsize = 32)
 	{
 		return rowCol.x * gridsize + rowCol.y;
@@ -25,30 +28,20 @@ namespace vxl
 			Bricks = RowColToIdx({9,9}),
 			Glass = RowColToIdx({15,24}),
 
-
 		};
 	public:
 		vxlBlock(const glm::vec3& worldPosition, VoxelType type);
-		~vxlBlock() = default; 
-
-		/*vxlBlock(const vxlBlock& other) = delete;
-		vxlBlock(vxlBlock&& other) = delete;*/
-		//vxlBlock& operator=(const vxlBlock& other) = delete;
-		//vxlBlock& operator=(vxlBlock&& other) = delete;
 
 		void SetType(VoxelType type) { m_type = type; }
 		void SetPosition(const glm::vec3& pos) { m_position = pos; }
-
 
 		VoxelType GetType() const { return m_type; }
 		glm::vec3  GetPosition() const { return m_position; }
 		
 	private:
-		uint32_t Vec2ToId(const glm::ivec2& rowCol) const;
-
-		const int AtlasSize{ 32 };
+		int m_atlasSize{ 32 };
 		glm::vec3 m_position; // World coordinates
-		VoxelType m_type;     // Type of voxel
+		VoxelType m_type;     // Type of voxel & Texture information
 	};
 }
 

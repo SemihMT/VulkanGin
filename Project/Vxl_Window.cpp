@@ -4,7 +4,8 @@
 
 #include "vxl_Camera.h"
 
-namespace vxl {
+namespace vxl
+{
 	vxlWindow::vxlWindow(int w, int h, const std::string& name) :
 		m_width(w),
 		m_height(h),
@@ -30,6 +31,11 @@ namespace vxl {
 		{
 			throw std::runtime_error("failed to create a window surface!");
 		}
+	}
+
+	VkExtent2D vxlWindow::GetExtent() const
+	{
+		return { static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height) };
 	}
 
 	void vxlWindow::InitWindow()
@@ -83,6 +89,7 @@ namespace vxl {
 
 	void vxlWindow::FrameBufferResizeCallback(GLFWwindow* window, int width, int height)
 	{
+
 		const auto w = static_cast<vxlWindow*>(glfwGetWindowUserPointer(window));
 		w->m_frameBufferResized = true;
 		w->m_width = width;
@@ -92,7 +99,8 @@ namespace vxl {
 	void vxlWindow::MouseMovementCallback(GLFWwindow* window, double xpos, double ypos)
 	{
 		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
-		if (callbacks && callbacks->mouseMoveCallback) {
+		if (callbacks && callbacks->mouseMoveCallback)
+		{
 			callbacks->mouseMoveCallback(window, xpos, ypos);
 		}
 	}
@@ -100,7 +108,8 @@ namespace vxl {
 	void vxlWindow::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	{
 		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
-		if (callbacks && callbacks->scrollCallback) {
+		if (callbacks && callbacks->scrollCallback)
+		{
 			callbacks->scrollCallback(window, xoffset, yoffset);
 		}
 	}
@@ -108,7 +117,8 @@ namespace vxl {
 	void vxlWindow::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
-		if (callbacks && callbacks->keyCallback) {
+		if (callbacks && callbacks->keyCallback)
+		{
 			callbacks->keyCallback(window, key, scancode, action, mods);
 		}
 	}
@@ -116,7 +126,8 @@ namespace vxl {
 	void vxlWindow::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	{
 		const vxlWindowCallbacks* callbacks = static_cast<vxlWindowCallbacks*>(glfwGetWindowUserPointer(window));
-		if (callbacks && callbacks->mouseButtonCallback) {
+		if (callbacks && callbacks->mouseButtonCallback)
+		{
 			callbacks->mouseButtonCallback(window, button, action, mods);
 		}
 	}

@@ -21,21 +21,20 @@ namespace vxl
 		vxlSwapChain& operator=(const vxlSwapChain& other) = delete;
 		vxlSwapChain& operator=(vxlSwapChain&& other) = delete;
 
-		VkFramebuffer GetFrameBuffer(int index) { return m_swapChainFrameBuffers[index]; }
-		VkFramebuffer GetFrameBuffer3D(int index) { return m_swapChainFrameBuffers3D[index]; }
-		VkImageView GetImageView(int index) { return m_swapChainImageViews[index]; }
-		VkRenderPass GetRenderPass() { return m_renderPass; }
-		VkRenderPass GetRenderPass3D() { return m_renderPass3D; }
+		// Getters
+		VkFramebuffer GetFrameBuffer(int index) const { return m_swapChainFrameBuffers[index]; }
+		VkFramebuffer GetFrameBuffer3D(int index) const { return m_swapChainFrameBuffers3D[index]; }
+		VkImageView GetImageView(int index) const { return m_swapChainImageViews[index]; }
+		VkRenderPass GetRenderPass() const { return m_renderPass; }
+		VkRenderPass GetRenderPass3D() const { return m_renderPass3D; }
 		const std::vector<VkImage>& GetSwapChainImages() { return m_swapChainImages; }
-		VkFormat GetSwapChainImageFormat() { return m_swapChainImageFormat; }
-		VkExtent2D GetSwapChainExtent() { return m_swapChainExtent; }
-
-		size_t ImageCount() { return m_swapChainImages.size(); }
-		uint32_t Width() { return m_swapChainExtent.width; }
-		uint32_t Height() { return m_swapChainExtent.height; }
-		size_t GetCurrentFrame() { return  m_currentFrame; }
-
-		float ExtentAspectRatio()
+		VkFormat GetSwapChainImageFormat() const { return m_swapChainImageFormat; }
+		VkExtent2D GetSwapChainExtent() const { return m_swapChainExtent; }
+		size_t ImageCount() const { return m_swapChainImages.size(); }
+		uint32_t Width() const { return m_swapChainExtent.width; }
+		uint32_t Height() const { return m_swapChainExtent.height; }
+		size_t GetCurrentFrame() const { return  m_currentFrame; }
+		float ExtentAspectRatio() const
 		{
 			return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height);
 		}
@@ -50,11 +49,11 @@ namespace vxl
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateDepthResources();
-		void CreateRenderPass2D();
+		void CreateRenderPass2D(); // Will load what the previous render pass has generated
 		void CreateFrameBuffers();
 		void CreateSyncObjects();
 
-		void CreateRenderPass3D();
+		void CreateRenderPass3D(); // Will store the frame so it can be rendered on top of
 		void CreateFrameBuffers3D();
 
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);

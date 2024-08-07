@@ -60,7 +60,7 @@ namespace vxl
 		vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 		vkDestroyDevice(m_device, nullptr);
 
-		if (enableValidationLayers) {
+		if (m_enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 		}
 
@@ -72,7 +72,7 @@ namespace vxl
 	void vxlDevice::CreateInstance()
 	{
 		// If we want validation layers but there is no support for them -> ERROR
-		if (enableValidationLayers && !CheckValidationLayerSupport()) {
+		if (m_enableValidationLayers && !CheckValidationLayerSupport()) {
 			throw std::runtime_error("validation layers requested, but not available!");
 		}
 
@@ -96,7 +96,7 @@ namespace vxl
 		createInfo.ppEnabledExtensionNames = extensions.data();
 
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-		if (enableValidationLayers)
+		if (m_enableValidationLayers)
 		{
 
 			createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
@@ -151,7 +151,7 @@ namespace vxl
 		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 		//If we want to have a custom callback for debug messages, we need the following extension
-		if (enableValidationLayers)
+		if (m_enableValidationLayers)
 		{
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
@@ -201,7 +201,7 @@ namespace vxl
 
 	void vxlDevice::SetupDebugMessenger()
 	{
-		if (!enableValidationLayers) return;
+		if (!m_enableValidationLayers) return;
 
 		VkDebugUtilsMessengerCreateInfoEXT createInfo;
 		PopulateDebugMessengerCreateInfo(createInfo);
@@ -283,7 +283,7 @@ namespace vxl
 		createInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
 
 		//Enabling device specific validation layers (!! Only for compatibility purposes !!)
-		if (enableValidationLayers)
+		if (m_enableValidationLayers)
 		{
 			createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
 			createInfo.ppEnabledLayerNames = m_validationLayers.data();

@@ -39,29 +39,27 @@ namespace vxl
 		void UpdateUBO(uint32_t currentImage, VkExtent2D extent, const vxlCamera& camera);
 
 	private:
-		//void CreateTextureImage();
+		// Creating textures alongside the UBO because sending the sampler information to the shaders uses related stuff
+		void CreateTextureImage(const std::string& texturePath, VkImage& textureImage, VkDeviceMemory& textureMemory);
 		void CreateTextureImageView(VkImageView& textureImageView, const VkImage& textureImage);
 		void CreateTextureSampler();
 
+		void CreateDescriptorSetLayout();	// Specifies the types of resources that are going to be accessed by the pipeline
+		void CreateUniformBuffers();		// Buffer that is made accessible in a read-only fashion to shaders so that the shaders can read constant parameter data
+		void CreateDescriptorPool();		// Create the Descriptor pool so we can acquire descriptor sets
+		void CreateDescriptorSets();		// Descriptor sets can't be created directly, they must be allocated from a pool like command buffers
 
-		void CreateDescriptorSetLayout();
-		void CreateUniformBuffers();
-		void CreateDescriptorPool();
-		void CreateDescriptorSets();
-
-		void CreateTextureImage(const std::string& texturePath, VkImage& textureImage, VkDeviceMemory& textureMemory);
 
 		vxlDevice& m_device;
 
-		VkImage m_textureImage3D;
-		VkDeviceMemory m_textureImageMemory3D;
-		VkImageView m_textureImageView3D;
+		VkImage m_textureAtlasImage;
+		VkDeviceMemory m_textureAtlasImageMemory;
+		VkImageView m_textureAtlasImageView;
 
-		VkImage m_textureImage2D;
-		VkDeviceMemory m_textureImageMemory2D;
-		VkImageView m_textureImageView2D;
+		VkImage m_hotbarTextureImage;
+		VkDeviceMemory m_hotbarTextureImageMemory;
+		VkImageView m_hotbarTextureImageView;
 
-		
 		VkImage m_crosshairTextureImage;
 		VkDeviceMemory m_crosshairTextureImageMemory;
 		VkImageView m_crosshairTextureImageView;

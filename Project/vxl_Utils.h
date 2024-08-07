@@ -48,6 +48,8 @@ namespace vxl
 		uint32_t subpass = 0;
 	};
 
+	int GetSquaredDistance(const glm::ivec3& pos1, const glm::ivec3& pos2);
+
 	float GenerateLayeredNoise(const glm::vec3& pos, int octaves, float persistence, float lacunarity, float scale);
 
 	float GenerateLayeredNoise(const glm::vec2& pos, int octaves, float persistence, float lacunarity, float scale);

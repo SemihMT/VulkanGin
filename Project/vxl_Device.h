@@ -8,7 +8,8 @@
 
 namespace vxl
 {
-	struct SwapChainSupportDetails {
+	struct SwapChainSupportDetails
+	{
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
@@ -16,7 +17,8 @@ namespace vxl
 
 
 	//This struct stores the index to the queue families that support the types of commands we'll be using for the program
-	struct QueueFamilyIndices {
+	struct QueueFamilyIndices
+	{
 		std::optional<uint32_t> graphicsFamily;
 		std::optional<uint32_t> presentFamily;
 
@@ -29,12 +31,6 @@ namespace vxl
 
 	class vxlDevice
 	{
-	public:
-#ifdef NDEBUG
-		const bool enableValidationLayers = false;
-#else
-		const bool enableValidationLayers = true;
-#endif
 	public:
 		vxlDevice(vxlWindow& window);
 		~vxlDevice();
@@ -51,6 +47,7 @@ namespace vxl
 		VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
 		VkQueue GetPresentQueue() const { return m_presentQueue; }
 		VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return m_properties; }
+
 		//Query functions
 		SwapChainSupportDetails GetSwapChainSupport() { return QuerySwapChainSupport(m_physicalDevice); }
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -89,27 +86,30 @@ namespace vxl
 			VkImage& image,
 			VkDeviceMemory& imageMemory);
 		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-
 		VkImageView CreateImageView(VkImage image, VkFormat format);
-
-
 	private:
+#ifdef NDEBUG
+		const bool m_enableValidationLayers = false;
+#else
+		const bool m_enableValidationLayers = true;
+#endif
+
 		VkPhysicalDeviceProperties m_properties;
 
-		void CreateInstance();
-		void SetupDebugMessenger();
-		void CreateSurface();
-		void PickPhysicalDevice();
+		void CreateInstance();		// Connection between the application and the Vulkan library
+		void SetupDebugMessenger(); // Validation layer stuff
+		void CreateSurface();		// Creates the window surface
+		void PickPhysicalDevice();	// Choosing a GPU that matches our needs 
 		void CreateLogicalDevice();
-		void CreateCommandPool();
+		void CreateCommandPool();	// Create command pool from which command buffers will be acquired
 
 		// helper functions
-		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-		bool IsDeviceSuitable(VkPhysicalDevice device);
-		std::vector<const char*> GetRequiredExtensions();
+		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);	// Find the queue families the GPU supports
+		bool IsDeviceSuitable(VkPhysicalDevice device);					// Make sure the GPU supports the queues and the extensions we want
+		std::vector<const char*> GetRequiredExtensions(); 
 		bool CheckValidationLayerSupport();
 		void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-		void HasGLFWRequiredInstanceExtensions();
+		void HasGLFWRequiredInstanceExtensions();						// Checks whether the GPU supports GLFW specific vulkan extensions
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 

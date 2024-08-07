@@ -1,16 +1,10 @@
 #include "vxl_Chunk.h"
 
 #include <algorithm>
+#include <array>
 #include <execution>
 #include <iostream>
 #include <glm/gtc/noise.hpp>
-
-#include "GP2Buffer.h"
-#include "GP2Buffer.h"
-#include "GP2Buffer.h"
-#include "GP2Buffer.h"
-#include "GP2Buffer.h"
-#include "GP2Buffer.h"
 #include "vxl_Utils.h"
 
 std::vector<VkVertexInputBindingDescription> vxl::vxlChunk::Vertex3D::GetBindingDescriptions()
@@ -143,7 +137,8 @@ void vxl::vxlChunk::GenerateChunk(int seed)
 	// Fill the block positions and types
 	std::for_each(std::execution::par_unseq, blocks.begin(), blocks.end(), [&](BlockInfo& block) {
 		// Compute block coordinates
-		const int index = &block - blocks.data();
+		const ptrdiff_t ptrDiff = &block - blocks.data();
+		const int index = static_cast<int>(ptrDiff);
 		const int x = index / (ChunkSize * ChunkSize);
 		const int y = (index / ChunkSize) % ChunkSize;
 		const int z = index % ChunkSize;

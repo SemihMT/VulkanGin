@@ -92,10 +92,10 @@ void vxl::vxlCamera::OnScroll(double xoffset, double yoffset)
 void vxl::vxlCamera::OnKeyPress(int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
-		keyState[key] = true;
+		m_keyState[key] = true;
 	}
 	else if (action == GLFW_RELEASE) {
-		keyState[key] = false;
+		m_keyState[key] = false;
 		m_worldObserver->OnKeyPress(key,scancode,action,mods);
 	}
 	
@@ -108,36 +108,36 @@ void vxl::vxlCamera::OnMouseButton(int key, int action, int mods)
 
 void vxl::vxlCamera::ProcessInput(float deltaTime)
 {
-	if (keyState[GLFW_KEY_ESCAPE]) {
+	if (m_keyState[GLFW_KEY_ESCAPE]) {
 		glfwSetWindowShouldClose(m_window.GetGLFWWindow(), true);
 	}
 
 	const float cameraSpeed = m_speed * deltaTime;
-	if (keyState[GLFW_KEY_W]) 
+	if (m_keyState[GLFW_KEY_W]) 
 	{
 		m_cameraPos += cameraSpeed * m_cameraFront;
 	}
-	if (keyState[GLFW_KEY_S]) 
+	if (m_keyState[GLFW_KEY_S]) 
 	{
 		m_cameraPos -= cameraSpeed * m_cameraFront;
 	}
-	if (keyState[GLFW_KEY_A]) 
+	if (m_keyState[GLFW_KEY_A]) 
 	{
 		m_cameraPos -= normalize(glm::cross(m_cameraFront, m_cameraUp)) * cameraSpeed;
 	}
-	if (keyState[GLFW_KEY_D]) 
+	if (m_keyState[GLFW_KEY_D]) 
 	{
 		m_cameraPos += normalize(glm::cross(m_cameraFront, m_cameraUp)) * cameraSpeed;
 	}
-	if (keyState[GLFW_KEY_SPACE])
+	if (m_keyState[GLFW_KEY_SPACE])
 	{
 		m_cameraPos += glm::vec3{ 0, 1, 0 } *cameraSpeed;
 	}
-	if (keyState[GLFW_KEY_LEFT_SHIFT]) 
+	if (m_keyState[GLFW_KEY_LEFT_SHIFT]) 
 	{
 		m_cameraPos -= glm::vec3{ 0, 1, 0 } *cameraSpeed;
 	}
-	if(keyState[GLFW_KEY_LEFT_CONTROL])
+	if(m_keyState[GLFW_KEY_LEFT_CONTROL])
 	{
 		m_speed = 25.0f;
 	}else

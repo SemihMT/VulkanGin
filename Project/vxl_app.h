@@ -23,7 +23,6 @@ namespace vxl
 		static constexpr int WIDTH = 1920;
 		static constexpr int HEIGHT = 1080;
 	public:
-		void PrintControls();
 		vxlApp();
 		~vxlApp();
 
@@ -32,19 +31,21 @@ namespace vxl
 		vxlApp& operator=(const vxlApp& other) = delete;
 		vxlApp& operator=(vxlApp&& other) = delete;
 
-		void Run();
+		void Run();								// Start while loop
 	private:
+		void PrintControls();					// Print the controls to the console
 
-		void LoadModels();
+		void LoadModels();						// Create 2D meshes (UI) and initialize the 3D world
+		void CreateUBO();						// Create the UBO to pass program variables to the shaders
+		void CreatePipelineLayout();			// Create the 2D and 3D pipeline layouts 
+		void CreatePipeline();					// Create the pipelines from the layouts
+		void CreateCommandBuffers();			// Create the command buffers to process GPU commands
+		void FreeCommandBuffers();				// Free/cleanup the command buffers
+		void DrawFrame();						// Calls 'RecordCommandBuffer' and submits the recorded buffer (also some swap chain stuff)
+		void RecreateSwapChain();				// Recreate the swap chain when the format changes (e.g. when the screen resizes)
+		void RecordCommandBuffer(int imageIdx);	// Send the Draw commands to the GPU through the command buffers
 
-		void CreateUBO();
-		void CreatePipelineLayout();
-		void CreatePipeline();
-		void CreateCommandBuffers();
-		void FreeCommandBuffers();
-		void DrawFrame();
-		void RecreateSwapChain();
-		void RecordCommandBuffer(int imageIdx);
+
 
 
 		vxlWindow m_vxlWindow{ WIDTH, HEIGHT, "vxlEngine" };
@@ -52,19 +53,21 @@ namespace vxl
 		vxlDevice m_vxlDevice{ m_vxlWindow };
 
 		std::unique_ptr<vxlSwapChain> m_vxlSwapChain{ nullptr };
-		std::unique_ptr<vxlGraphicsPipeline> m_vxlGraphicsPipeline{ nullptr };
-		std::unique_ptr<vxlGraphicsPipeline3D> m_vxlGraphicsPipeline3D{ nullptr };
-		
-		
+		std::vector<VkCommandBuffer> m_commandBuffers;
+		std::unique_ptr<vxlUBO> m_vxlUBO;
 
 		VkPipelineLayout m_pipelineLayout;
+		std::unique_ptr<vxlGraphicsPipeline> m_vxlGraphicsPipeline{ nullptr };
+
 		VkPipelineLayout m_pipelineLayout3D;
-		std::vector<VkCommandBuffer> m_commandBuffers;
+		std::unique_ptr<vxlGraphicsPipeline3D> m_vxlGraphicsPipeline3D{ nullptr };
+
+
+		//2D meshes
 		std::unique_ptr<vxlModel> m_vxlHotbarModel{ nullptr };
 		std::unique_ptr<vxlModel> m_vxlCrosshairModel{ nullptr };
-		std::unique_ptr<vxlModel3D> m_vxlModel3D{ nullptr };
-		std::unique_ptr<vxlWorld> m_vxlWorld{};
 
-		std::unique_ptr<vxlUBO> m_vxlUBO;
+		// The voxel world
+		std::unique_ptr<vxlWorld> m_vxlWorld{};
 	};
 }
